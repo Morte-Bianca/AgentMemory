@@ -15,6 +15,32 @@ async function getApp(): Promise<FastifyInstance> {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const app = await getApp();
-  app.server.emit('request', req, res);
+  try {
+    const app = await getApp();
+    await new Promise<void>((resolve, reject) => {
+      const done = () => resolve();
+      res.once('finish', done);
+      res.once('close', done);
+      res.once('error', reject);
+      app.server.emit('request', req, res);
+    });
+  } catch (error) {
+    console.error('Vercel function handler failed', error);
+    if (!res.headersSent) {
+      res.statusCode = 500;
+      res.setHeader('content-type', 'application/json; charset=utf-8');
+      res.end(
+        JSON.stringify({
+          error: 'internal_server_error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        }),
+      );
+      return;
+    }
+    try {
+      res.end();
+    } catch {
+      // ignore
+    }
+  }
 }
