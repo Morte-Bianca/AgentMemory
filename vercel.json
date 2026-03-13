@@ -1,11 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
-  "outputDirectory": "public",
-  "routes": [
-    { "src": "/health", "dest": "/api/health" },
-    { "src": "/v1/(.*)", "dest": "/api/v1?path=$1" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/health", "destination": "/api/health" },
+    { "source": "/v1/:path*", "destination": "/api/v1?path=:path*" },
+    { "source": "/((?!api/|v1/|health).*)", "destination": "/index.html" }
   ]
 }
