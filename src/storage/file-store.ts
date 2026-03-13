@@ -4,6 +4,7 @@ import type { McpSessionRecord, StoreData } from '../types';
 import type { StoreAdapter } from './types';
 
 const EMPTY_STORE: StoreData = {
+  users: [],
   agents: [],
   sessions: [],
   memories: [],
@@ -13,6 +14,7 @@ const EMPTY_STORE: StoreData = {
 
 function normalizeStoreData(parsed: Partial<StoreData> | null | undefined): StoreData {
   return {
+    users: parsed?.users ?? [],
     agents: parsed?.agents ?? [],
     sessions: parsed?.sessions ?? [],
     memories: parsed?.memories ?? [],

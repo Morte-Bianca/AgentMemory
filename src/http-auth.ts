@@ -1,7 +1,8 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { AgentRecord } from './types';
+import type { AgentRecord, UserRecord } from './types';
 import type { AppServices } from './fastify-app';
 import { config } from './config';
+import { verifyUserSession } from './auth-session';
 
 function readApiKey(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -15,6 +16,45 @@ function readApiKey(request: FastifyRequest): string | null {
   }
 
   return null;
+}
+
+function readUserSessionToken(request: FastifyRequest): string | null {
+  const header = request.headers['x-user-session'];
+  if (typeof header === 'string' && header.trim()) {
+    return header.trim();
+  }
+  return null;
+}
+
+export async function requireUserSession(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  services: AppServices,
+): Promise<UserRecord | null> {
+  const token = readUserSessionToken(request);
+  if (!token) {
+    await reply.status(401).send({ error: 'Missing user session' });
+    return null;
+  }
+
+  if (!config.authSessionSecret) {
+    await reply.status(500).send({ error: 'AUTH_SESSION_SECRET is not configured' });
+    return null;
+  }
+
+  const session = verifyUserSession(token, config.authSessionSecret);
+  if (!session) {
+    await reply.status(401).send({ error: 'Invalid user session' });
+    return null;
+  }
+
+  const user = await services.users.getById(session.userId);
+  if (!user) {
+    await reply.status(401).send({ error: 'User not found' });
+    return null;
+  }
+
+  return user;
 }
 
 export async function requireAgentAuth(

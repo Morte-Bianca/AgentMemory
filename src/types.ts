@@ -5,10 +5,21 @@ export type MemoryType =
   | 'self_model'
   | 'introspective';
 
+export interface UserRecord {
+  id: string;
+  googleSub: string;
+  email: string;
+  name: string;
+  picture?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AgentRecord {
   id: string;
   name: string;
   description?: string;
+  ownerUserId?: string;
   apiKeyHash: string;
   apiKeyPrefix: string;
   apiKeyStatus: 'active' | 'revoked';
@@ -118,6 +129,7 @@ export interface McpSessionRecord {
 }
 
 export interface StoreData {
+  users: UserRecord[];
   agents: AgentRecord[];
   sessions: SessionRecord[];
   memories: MemoryRecord[];

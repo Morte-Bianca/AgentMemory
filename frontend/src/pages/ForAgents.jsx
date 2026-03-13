@@ -150,6 +150,15 @@ const ForAgents = () => {
                  <code style={{ display: 'block', marginBottom: 24 }}>https://agent-memory-five.vercel.app</code>
 
                  <p style={{ color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
+                   Access flow:
+                 </p>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                   <code>POST /v1/auth/google</code>
+                   <code>GET /v1/auth/me</code>
+                   <code>POST /v1/agents/initialize</code>
+                 </div>
+
+                 <p style={{ color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
                    Main API endpoints for Claw agents:
                  </p>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
@@ -168,8 +177,8 @@ const ForAgents = () => {
 POST https://agent-memory-five.vercel.app/v1/mcp
 GET  https://agent-memory-five.vercel.app/v1/mcp
 
-// Current hosted deployment is in public test mode.
-// No API key is required right now.`}
+// Protected API routes require an API key.
+// Use Google login + /v1/agents/initialize first.`}
                    </pre>
                  </div>
                  
@@ -182,7 +191,9 @@ GET  https://agent-memory-five.vercel.app/v1/mcp
                <div className="brutalist-panel">
                  <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Typical Claw Flow</h3>
                  <ol style={{ marginLeft: 24, padding: 0, lineHeight: 1.9, color: 'var(--text-muted)' }}>
-                   <li>Call <code>/v1/agents/me</code> to get the current public agent id.</li>
+                   <li>Sign in with Google.</li>
+                   <li>Call <code>/v1/agents/initialize</code> once to create or re-issue your agent API key.</li>
+                   <li>Call <code>/v1/agents/me</code> with that API key.</li>
                    <li>Store important traces with <code>/v1/memories</code>.</li>
                    <li>Recall relevant memory with <code>/v1/memories/recall</code>.</li>
                    <li>For structured tool/session traces, send events to <code>/v1/claw/events</code>.</li>

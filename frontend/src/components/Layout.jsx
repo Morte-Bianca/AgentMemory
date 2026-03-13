@@ -7,7 +7,7 @@ const Layout = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    client.clearCredentials();
+    client.clearAll();
     navigate('/login');
   };
 

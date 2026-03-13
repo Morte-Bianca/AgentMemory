@@ -6,7 +6,7 @@ Hi — thanks for taking a look at this.
 
 I’ve been building a hosted memory service for Claw-style agents and I’d really like to get feedback from people who are already running real agents in real workflows.
 
-The deployment is live, the core memory flows are working, MCP is exposed, and Postgres-backed persistence is enabled. At this stage, what I need most is practical testing from actual Claw users: what works, what feels rough, what breaks, and what would stop you from using this in a real setup.
+The deployment is live, the core memory flows are working, MCP is exposed, and Postgres-backed persistence is enabled. Access is now moving to a Google-login + per-agent API key flow. At this stage, what I need most is practical testing from actual Claw users: what works, what feels rough, what breaks, and what would stop you from using this in a real setup.
 
 If you have a Claw agent environment, I’d really appreciate it if you could spend a bit of time testing the API and MCP endpoints.
 
@@ -18,7 +18,7 @@ In particular, I’m interested in feedback on:
 - Claw event ingestion
 - anything confusing, brittle, or missing
 
-This is a public test deployment, so please don’t send secrets or sensitive data.
+Please still avoid sending secrets or sensitive data during testing.
 
 If something fails, feels awkward, or behaves differently than you expect, that feedback is just as useful as a successful test.
 
@@ -35,6 +35,9 @@ Base URL:
 Main endpoints to test:
 
 - `GET /health`
+- `POST /v1/auth/google`
+- `GET /v1/auth/me`
+- `POST /v1/agents/initialize`
 - `GET /v1/agents/me`
 - `POST /v1/memories`
 - `POST /v1/memories/recall`
@@ -43,16 +46,23 @@ Main endpoints to test:
 - `POST /v1/mcp`
 - `GET /v1/mcp`
 
-This deployment is in public test mode right now, so no API key is required.
+Protected API routes require an API key. The intended flow is:
+
+1. sign in with Google
+2. initialize your agent identity
+3. receive or re-issue the API key for that agent
+4. use that API key for all protected API calls
 
 Typical flow for a Claw agent:
 
-1. call `GET /v1/agents/me` to get the current shared public agent id
-2. store useful interaction traces with `POST /v1/memories`
-3. retrieve relevant memory with `POST /v1/memories/recall`
-4. optionally send structured agent/tool events to `POST /v1/claw/events`
-5. optionally fetch assembled working context from `POST /v1/claw/context`
-6. if your client supports MCP over HTTP, connect to `/v1/mcp`
+1. sign in with Google through the frontend or your own client flow
+2. call `POST /v1/agents/initialize` once to get your agent and API key
+3. call `GET /v1/agents/me` with that API key
+4. store useful interaction traces with `POST /v1/memories`
+5. retrieve relevant memory with `POST /v1/memories/recall`
+6. optionally send structured agent/tool events to `POST /v1/claw/events`
+7. optionally fetch assembled working context from `POST /v1/claw/context`
+8. if your client supports MCP over HTTP, connect to `/v1/mcp`
 
 If you test it, I’d really appreciate feedback on recall quality, MCP compatibility, session behavior, and anything that feels rough or breaks in a real workflow.
 
@@ -73,16 +83,14 @@ MCP endpoint:
 - POST https://agent-memory-five.vercel.app/v1/mcp
 - GET https://agent-memory-five.vercel.app/v1/mcp
 
-## Current Test Mode
+## Access Model
 
-The deployment is currently running in public test mode.
+The intended access model is:
 
-What that means:
-
-- No API key is required.
-- Anonymous requests are mapped to a shared public agent.
-- Data written during testing should be treated as non-private.
-- This environment is for interoperability and workflow testing, not for production secrets.
+- Google login for user identity
+- one owned agent per user
+- API key access for protected routes
+- Postgres-backed persistence for the agent data
 
 ## What This Service Does
 

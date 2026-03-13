@@ -10,7 +10,9 @@ import { MemoryService } from './services/memory-service';
 import { DreamService } from './services/dream-service';
 import { DreamScheduler } from './services/dream-scheduler';
 import { ClawService } from './services/claw-service';
+import { UserService } from './services/user-service';
 import { registerHealthRoutes } from './routes/health';
+import { registerAuthRoutes } from './routes/auth';
 import { registerAgentRoutes } from './routes/agents';
 import { registerSessionRoutes } from './routes/sessions';
 import { registerMemoryRoutes } from './routes/memories';
@@ -20,6 +22,7 @@ import { registerMcpRoutes } from './routes/mcp';
 
 export interface AppServices {
   store: StoreAdapter;
+  users: UserService;
   agents: AgentService;
   sessions: SessionService;
   memories: MemoryService;
@@ -36,6 +39,7 @@ export async function buildApp() {
   await store.init?.();
   const embeddingProvider = createEmbeddingProvider();
   const dreamProvider = createDreamProvider();
+  const users = new UserService(store);
   const agents = new AgentService(store);
   const sessions = new SessionService(store);
   const memories = new MemoryService(store, embeddingProvider);
@@ -45,6 +49,7 @@ export async function buildApp() {
 
   const services: AppServices = {
     store,
+    users,
     agents,
     sessions,
     memories,
@@ -54,6 +59,7 @@ export async function buildApp() {
   };
 
   await registerHealthRoutes(app);
+  await registerAuthRoutes(app, services);
   await registerAgentRoutes(app, services);
   await registerSessionRoutes(app, services);
   await registerMemoryRoutes(app, services);

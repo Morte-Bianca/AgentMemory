@@ -37,9 +37,12 @@ English external tester guide:
 ## Endpoint'ler
 
 - `GET /health`
+- `POST /v1/auth/google`
+- `GET /v1/auth/me`
 - `GET /v1/agents`
 - `GET /v1/agents/me`
 - `POST /v1/agents`
+- `POST /v1/agents/initialize`
 - `POST /v1/agents/me/api-key/rotate`
 - `POST /v1/agents/me/api-key/revoke`
 - `POST /v1/sessions`
@@ -59,12 +62,23 @@ English external tester guide:
 
 ## Auth
 
-`POST /v1/agents` çağrısı yeni bir agent ve tek-seferlik gösterilen bir `apiKey` döner.
+Önerilen hosted akış:
+
+1. kullanıcı Google ile login olur
+2. `POST /v1/auth/google` ile backend user session alır
+3. `POST /v1/agents/initialize` ile owned agent + tek-seferlik gösterilen `apiKey` alınır
+4. korunan route'larda bu `apiKey` kullanılır
+
+`GET /v1/auth/me` owner session ile mevcut kullanıcıyı ve varsa bağlı agent'ı döner.
 
 Korunan endpoint'lerde şu header'lardan biri gerekir:
 
 - `Authorization: Bearer <apiKey>`
 - `x-api-key: <apiKey>`
+
+User-session tabanlı owner bootstrap endpoint'lerinde ayrıca şu header kullanılır:
+
+- `x-user-session: <sessionToken>`
 
 API key lifecycle endpoint'leri:
 
@@ -74,10 +88,13 @@ API key lifecycle endpoint'leri:
 Rotation sonrası eski key anında geçersiz olur.
 Revoke sonrası mevcut key de geçersiz olur.
 
-Auth bypass (sadece test için):
+Google login / owner flow için gereken env'ler:
 
-- `TEST_MODE=true` ile API key göndermeden de istek atılabilir.
-- Bu modda kimliksiz istekler, paylaşımlı bir public agent üzerinden yürür.
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_IDS`
+- `VITE_GOOGLE_CLIENT_ID`
+- `AUTH_SESSION_SECRET`
+
+Sadece test için auth bypass hâlâ `TEST_MODE=true` ile açılabilir, ancak production/hosted kullanım için önerilmez.
 
 ## Claw akışı
 

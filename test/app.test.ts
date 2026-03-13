@@ -6,6 +6,11 @@ const testDataFile = path.join(process.cwd(), 'data', 'test-store.json');
 const defaultEnv = {
   DATA_FILE_PATH: testDataFile,
   STORAGE_DRIVER: 'file',
+  TEST_MODE: 'false',
+  ALLOW_OPEN_AGENT_CREATE: 'false',
+  GOOGLE_CLIENT_ID: '',
+  GOOGLE_CLIENT_IDS: '',
+  AUTH_SESSION_SECRET: '',
   MCP_SESSION_EVENT_LIMIT: '100',
   MCP_SESSION_TTL_MS: String(1000 * 60 * 60 * 24),
 };
@@ -22,6 +27,68 @@ describe('Claw memory API', () => {
     vi.resetModules();
     Object.assign(process.env, defaultEnv);
     await rm(testDataFile, { force: true });
+  });
+
+  it('supports Google login followed by owned agent initialization and API-key-only access', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          sub: 'google-sub-1',
+          email: 'owner@example.com',
+          name: 'Owner Example',
+          aud: 'google-client-1',
+          email_verified: 'true',
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        },
+      ),
+    );
+
+    const app = await buildTestApp({
+      AUTH_SESSION_SECRET: 'test-secret',
+      GOOGLE_CLIENT_ID: 'google-client-1',
+    });
+
+    const auth = await app.inject({
+      method: 'POST',
+      url: '/v1/auth/google',
+      payload: { credential: 'fake-google-token' },
+    });
+
+    expect(auth.statusCode).toBe(200);
+    const sessionToken = auth.json().sessionToken as string;
+
+    const init = await app.inject({
+      method: 'POST',
+      url: '/v1/agents/initialize',
+      headers: { 'x-user-session': sessionToken },
+      payload: { name: 'gmail-owned-agent' },
+    });
+
+    expect(init.statusCode).toBe(201);
+    expect(init.json().agent.name).toBe('gmail-owned-agent');
+    const apiKey = init.json().apiKey as string;
+
+    const unauthorized = await app.inject({
+      method: 'GET',
+      url: '/v1/agents/me',
+    });
+
+    expect(unauthorized.statusCode).toBe(401);
+
+    const authorized = await app.inject({
+      method: 'GET',
+      url: '/v1/agents/me',
+      headers: { 'x-api-key': apiKey },
+    });
+
+    expect(authorized.statusCode).toBe(200);
+    expect(authorized.json().agent.name).toBe('gmail-owned-agent');
+
+    fetchSpy.mockRestore();
+    await app.close();
   });
 
   it('creates an agent, stores memories, recalls, and runs dream cycle', async () => {

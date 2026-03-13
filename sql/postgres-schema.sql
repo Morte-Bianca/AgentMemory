@@ -1,9 +1,21 @@
 -- Base schema (pgvector is optional)
 
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  google_sub TEXT NOT NULL UNIQUE,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  picture TEXT,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_users_google_sub ON users(google_sub);
+
 CREATE TABLE IF NOT EXISTS agents (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
+  owner_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   api_key_hash TEXT NOT NULL,
   api_key_prefix TEXT NOT NULL,
   api_key_status TEXT NOT NULL DEFAULT 'active',
@@ -12,9 +24,11 @@ CREATE TABLE IF NOT EXISTS agents (
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS owner_user_id TEXT REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS api_key_status TEXT NOT NULL DEFAULT 'active';
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS api_key_rotated_at TIMESTAMPTZ;
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS api_key_revoked_at TIMESTAMPTZ;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_agents_owner_user_id_unique ON agents(owner_user_id) WHERE owner_user_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,

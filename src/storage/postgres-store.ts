@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { AgentRecord, DreamRunRecord, McpQueuedEvent, McpSessionRecord, MemoryRecord, SessionRecord, StoreData } from '../types';
+import type { AgentRecord, DreamRunRecord, McpQueuedEvent, McpSessionRecord, MemoryRecord, SessionRecord, StoreData, UserRecord } from '../types';
 import type { SearchMemoriesInput, SearchMemoryCandidate, StoreAdapter } from './types';
 import { POSTGRES_SCHEMA_SQL } from './postgres-schema';
 
@@ -7,11 +7,22 @@ interface AgentRow {
   id: string;
   name: string;
   description: string | null;
+  owner_user_id: string | null;
   api_key_hash: string;
   api_key_prefix: string;
   api_key_status: AgentRecord['apiKeyStatus'];
   api_key_rotated_at: string | Date | null;
   api_key_revoked_at: string | Date | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+}
+
+interface UserRow {
+  id: string;
+  google_sub: string;
+  email: string;
+  name: string;
+  picture: string | null;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -243,7 +254,8 @@ export class PostgresStore implements StoreAdapter {
   async read(): Promise<StoreData> {
     await this.init();
 
-    const [agentsRes, sessionsRes, memoriesRes, dreamRunsRes, mcpSessionsRes] = await Promise.all([
+    const [usersRes, agentsRes, sessionsRes, memoriesRes, dreamRunsRes, mcpSessionsRes] = await Promise.all([
+      this.pool.query(`SELECT * FROM users ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM agents ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM sessions ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM memories ORDER BY created_at DESC`),
@@ -251,10 +263,21 @@ export class PostgresStore implements StoreAdapter {
       this.pool.query(`SELECT * FROM mcp_sessions ORDER BY updated_at DESC`),
     ]);
 
+    const users: UserRecord[] = usersRes.rows.map((row: UserRow) => ({
+      id: row.id,
+      googleSub: row.google_sub,
+      email: row.email,
+      name: row.name,
+      picture: row.picture ?? undefined,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    }));
+
     const agents: AgentRecord[] = agentsRes.rows.map((row: AgentRow) => ({
       id: row.id,
       name: row.name,
       description: row.description ?? undefined,
+      ownerUserId: row.owner_user_id ?? undefined,
       apiKeyHash: row.api_key_hash,
       apiKeyPrefix: row.api_key_prefix,
       apiKeyStatus: row.api_key_status,
@@ -289,7 +312,7 @@ export class PostgresStore implements StoreAdapter {
 
     const mcpSessions: McpSessionRecord[] = mcpSessionsRes.rows.map((row: McpSessionRow) => mapMcpSessionRow(row));
 
-    return { agents, sessions, memories, dreamRuns, mcpSessions };
+    return { users, agents, sessions, memories, dreamRuns, mcpSessions };
   }
 
   async write(next: StoreData): Promise<void> {
@@ -303,15 +326,25 @@ export class PostgresStore implements StoreAdapter {
       await client.query('DELETE FROM memories');
       await client.query('DELETE FROM sessions');
       await client.query('DELETE FROM agents');
+      await client.query('DELETE FROM users');
+
+      for (const user of next.users) {
+        await client.query(
+          `INSERT INTO users (id, google_sub, email, name, picture, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [user.id, user.googleSub, user.email, user.name, user.picture ?? null, user.createdAt, user.updatedAt],
+        );
+      }
 
       for (const agent of next.agents) {
         await client.query(
-          `INSERT INTO agents (id, name, description, api_key_hash, api_key_prefix, api_key_status, api_key_rotated_at, api_key_revoked_at, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          `INSERT INTO agents (id, name, description, owner_user_id, api_key_hash, api_key_prefix, api_key_status, api_key_rotated_at, api_key_revoked_at, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
           [
             agent.id,
             agent.name,
             agent.description ?? null,
+            agent.ownerUserId ?? null,
             agent.apiKeyHash,
             agent.apiKeyPrefix,
             agent.apiKeyStatus,

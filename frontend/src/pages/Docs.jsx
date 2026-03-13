@@ -109,18 +109,18 @@ const Docs = () => {
                </p>
 
                <div className="brutalist-panel" style={{ marginBottom: 32 }}>
-                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Current Hosted Test Mode</h3>
-                 <p style={{ marginBottom: 12 }}>The public deployment is currently running in shared test mode.</p>
+                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Identity Flow</h3>
+                 <p style={{ marginBottom: 12 }}>Users authenticate with Google, initialize one owned agent, and then use that agent's API key for protected routes.</p>
                  <ul style={{ listStyleType: 'square', marginLeft: 24, padding: 0, color: 'var(--text-muted)', lineHeight: 1.8 }}>
-                   <li>No API key is required for testing.</li>
-                   <li>Anonymous requests use a shared public agent.</li>
-                   <li>Do not send secrets or sensitive data.</li>
+                   <li>Google login is used to identify the human owner.</li>
+                   <li>`POST /v1/agents/initialize` returns the agent and API key.</li>
+                   <li>All protected API routes require the API key after that.</li>
                  </ul>
                </div>
 
                <div className="brutalist-panel" style={{ marginBottom: 32 }}>
                  <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Headers Required</h3>
-                 <p style={{ marginBottom: 16 }}>Protected environments require one of the following headers:</p>
+                 <p style={{ marginBottom: 16 }}>Protected routes require one of the following headers:</p>
                  <code style={{ display: 'block', marginBottom: 8 }}>Authorization: Bearer &lt;apiKey&gt;</code>
                  <code style={{ display: 'block' }}>x-api-key: &lt;apiKey&gt;</code>
                </div>
@@ -130,8 +130,13 @@ const Docs = () => {
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                      <span style={{ color: 'var(--primary)', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>POST</span>
-                     <code>/v1/agents</code>
-                     <span className="text-muted text-sm">— Creates entirely new agent and returns one-time API Key.</span>
+                     <code>/v1/auth/google</code>
+                     <span className="text-muted text-sm">— Verifies a Google ID token and creates a signed user session.</span>
+                   </div>
+                   <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                     <span style={{ color: 'var(--primary)', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>POST</span>
+                     <code>/v1/agents/initialize</code>
+                     <span className="text-muted text-sm">— Creates or re-issues the owned agent API key.</span>
                    </div>
                    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                      <span style={{ color: 'var(--primary)', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>POST</span>

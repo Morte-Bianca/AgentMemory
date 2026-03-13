@@ -48,6 +48,7 @@ export const config = {
   port: Number(process.env.PORT || 3000),
   host: process.env.HOST || '0.0.0.0',
   testMode: readBool(process.env.TEST_MODE, false),
+  allowOpenAgentCreate: readBool(process.env.ALLOW_OPEN_AGENT_CREATE, false),
   storageDriver: (process.env.STORAGE_DRIVER || 'file') as 'file' | 'postgres',
   databaseUrl:
     process.env.DATABASE_URL ||
@@ -62,4 +63,6 @@ export const config = {
   mcpSessionEventLimit: Number(process.env.MCP_SESSION_EVENT_LIMIT || 100),
   mcpSessionTtlMs: Number(process.env.MCP_SESSION_TTL_MS || 1000 * 60 * 60 * 24),
   mcpAllowedOrigins: splitCsv(process.env.MCP_ALLOWED_ORIGINS),
+  googleClientIds: splitCsv(process.env.GOOGLE_CLIENT_IDS || process.env.GOOGLE_CLIENT_ID),
+  authSessionSecret: process.env.AUTH_SESSION_SECRET || '',
 };

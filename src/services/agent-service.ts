@@ -6,6 +6,11 @@ import type { StoreAdapter } from '../storage';
 export class AgentService {
   constructor(private readonly store: StoreAdapter) {}
 
+  async getByOwnerUserId(userId: string): Promise<AgentRecord | undefined> {
+    const state = await this.store.read();
+    return state.agents.find((agent) => agent.ownerUserId === userId);
+  }
+
   async getOrCreatePublicAgent(input?: { name?: string; description?: string }): Promise<AgentRecord> {
     const state = await this.store.read();
     const name = input?.name ?? '__public__';
@@ -54,6 +59,34 @@ export class AgentService {
     state.agents.push(agent);
     await this.store.write(state);
     return { agent, apiKey };
+  }
+
+  async initializeForOwner(input: { ownerUserId: string; name: string; description?: string }): Promise<{ agent: AgentRecord; apiKey: string; created: boolean }> {
+    const existing = await this.getByOwnerUserId(input.ownerUserId);
+    if (existing) {
+      const rotated = await this.rotateApiKey(existing.id);
+      return { ...rotated, created: false };
+    }
+
+    const state = await this.store.read();
+    const now = new Date().toISOString();
+    const apiKey = generateApiKey();
+
+    const agent: AgentRecord = {
+      id: createId('agt'),
+      name: input.name,
+      description: input.description,
+      ownerUserId: input.ownerUserId,
+      apiKeyHash: hashApiKey(apiKey),
+      apiKeyPrefix: apiKeyPrefix(apiKey),
+      apiKeyStatus: 'active',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    state.agents.push(agent);
+    await this.store.write(state);
+    return { agent, apiKey, created: true };
   }
 
   async list(): Promise<AgentRecord[]> {
