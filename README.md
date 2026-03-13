@@ -70,6 +70,11 @@ API key lifecycle endpoint'leri:
 Rotation sonrası eski key anında geçersiz olur.
 Revoke sonrası mevcut key de geçersiz olur.
 
+Auth bypass (sadece test için):
+
+- `TEST_MODE=true` ile API key göndermeden de istek atılabilir.
+- Bu modda kimliksiz istekler, paylaşımlı bir public agent üzerinden yürür.
+
 ## Claw akışı
 
 Önerilen akış:
@@ -131,14 +136,15 @@ STORAGE_DRIVER=postgres
 DATABASE_URL=postgres://postgres:postgres@localhost:5432/agentmemory
 ```
 
+Vercel Postgres kullanıyorsan genelde `POSTGRES_URL` / `POSTGRES_PRISMA_URL` otomatik gelir; `DATABASE_URL` set etmeden de çalışır.
+
 İlk başlangıçta tablo şeması otomatik oluşturulur.
 
-Postgres modunda temel `pgvector` hazırlığı da eklenmiştir:
+Postgres modunda embedding saklama ve (opsiyonel) vector search desteği vardır:
 
-- `vector` extension
-- `memories.embedding`
-- HNSW index
-- nearest-neighbor candidate sorgusu (`embedding <=> query_vector`)
+- Her zaman: `memories.embedding` (TEXT) ve `memories.embedding_model`
+- `pgvector` varsa: `embedding_vector` (vector) kolonu + (best-effort) HNSW index
+- Vector search yoksa: recall sorgusu metadata/text/tag üzerinden degrade eder (sistem çalışmaya devam eder).
 
 Elle incelemek için SQL dosyası:
 
@@ -231,6 +237,14 @@ npm run dev
 npm run build
 npm start
 ```
+
+## Docker (public test)
+
+Docker ile public (geçici) deploy için: [docs/docker-public-deploy.md](docs/docker-public-deploy.md)
+
+## Vercel (public test)
+
+Vercel web arayüzü ile deploy için: [docs/vercel-deploy.md](docs/vercel-deploy.md)
 
 ## Test
 

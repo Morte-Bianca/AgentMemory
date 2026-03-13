@@ -1,0 +1,23 @@
+services:
+  agentmemory:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      STORAGE_DRIVER: file
+      DATA_FILE_PATH: /app/data/store.json
+      # Public test mode (no API key required).
+      # For normal behavior (API key required), set TEST_MODE to "false".
+      TEST_MODE: "true"
+      # If you test MCP from a browser, set allowed origins.
+      MCP_ALLOWED_ORIGINS: "*"
+      MCP_SESSION_EVENT_LIMIT: "100"
+      MCP_SESSION_TTL_MS: "86400000"
+    volumes:
+      - agentmemory-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  agentmemory-data:

@@ -6,6 +6,35 @@ import type { StoreAdapter } from '../storage';
 export class AgentService {
   constructor(private readonly store: StoreAdapter) {}
 
+  async getOrCreatePublicAgent(input?: { name?: string; description?: string }): Promise<AgentRecord> {
+    const state = await this.store.read();
+    const name = input?.name ?? '__public__';
+    const description = input?.description ?? 'Anonymous shared agent (auth disabled)';
+
+    const existing = state.agents.find((agent) => agent.name === name);
+    if (existing) {
+      return existing;
+    }
+
+    const now = new Date().toISOString();
+    const apiKey = generateApiKey();
+
+    const agent: AgentRecord = {
+      id: createId('agt'),
+      name,
+      description,
+      apiKeyHash: hashApiKey(apiKey),
+      apiKeyPrefix: apiKeyPrefix(apiKey),
+      apiKeyStatus: 'active',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    state.agents.push(agent);
+    await this.store.write(state);
+    return agent;
+  }
+
   async create(input: { name: string; description?: string }): Promise<{ agent: AgentRecord; apiKey: string }> {
     const state = await this.store.read();
     const now = new Date().toISOString();

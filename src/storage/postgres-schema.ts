@@ -1,6 +1,4 @@
 export const POSTGRES_SCHEMA_SQL = `
-CREATE EXTENSION IF NOT EXISTS vector;
-
 CREATE TABLE IF NOT EXISTS agents (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -46,16 +44,15 @@ CREATE TABLE IF NOT EXISTS memories (
   last_accessed_at TIMESTAMPTZ NOT NULL,
   access_count INTEGER NOT NULL DEFAULT 0,
   dream_origin_run_id TEXT,
-  embedding vector(128),
+  embedding TEXT,
   embedding_model TEXT
 );
-ALTER TABLE memories ADD COLUMN IF NOT EXISTS embedding vector(128);
+ALTER TABLE memories ADD COLUMN IF NOT EXISTS embedding TEXT;
 ALTER TABLE memories ADD COLUMN IF NOT EXISTS embedding_model TEXT;
 ALTER TABLE memories ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
 CREATE INDEX IF NOT EXISTS idx_memories_agent_id ON memories(agent_id);
 CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
 CREATE INDEX IF NOT EXISTS idx_memories_tags_gin ON memories USING GIN(tags);
-CREATE INDEX IF NOT EXISTS idx_memories_embedding_hnsw ON memories USING hnsw (embedding vector_cosine_ops);
 
 CREATE TABLE IF NOT EXISTS dream_runs (
   id TEXT PRIMARY KEY,

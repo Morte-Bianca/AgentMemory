@@ -13,7 +13,7 @@ const defaultEnv = {
 async function buildTestApp(envOverrides?: Record<string, string | undefined>) {
   vi.resetModules();
   Object.assign(process.env, defaultEnv, envOverrides ?? {});
-  const { buildApp } = await import('../src/app');
+  const { buildApp } = await import('../src/fastify-app');
   return buildApp();
 }
 

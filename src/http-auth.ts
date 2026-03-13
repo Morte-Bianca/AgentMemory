@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { AgentRecord } from './types';
-import type { AppServices } from './app';
+import type { AppServices } from './fastify-app';
+import { config } from './config';
 
 function readApiKey(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -22,6 +23,11 @@ export async function requireAgentAuth(
   services: AppServices,
 ): Promise<AgentRecord | null> {
   const apiKey = readApiKey(request);
+
+  if (!apiKey && config.testMode) {
+    return services.agents.getOrCreatePublicAgent();
+  }
+
   if (!apiKey) {
     await reply.status(401).send({ error: 'Missing API key' });
     return null;
@@ -29,6 +35,10 @@ export async function requireAgentAuth(
 
   const agent = await services.agents.authenticate(apiKey);
   if (!agent) {
+    if (config.testMode) {
+      return services.agents.getOrCreatePublicAgent();
+    }
+
     await reply.status(401).send({ error: 'Invalid API key' });
     return null;
   }
@@ -43,6 +53,11 @@ export async function ensureAgentScope(
 ): Promise<boolean> {
   if (!targetAgentId || authAgent.id === targetAgentId) {
     return true;
+  }
+
+  if (config.testMode && authAgent.name === '__public__') {
+    await reply.status(403).send({ error: 'Anonymous access cannot target other agents' });
+    return false;
   }
 
   await reply.status(403).send({ error: 'Agent scope mismatch' });

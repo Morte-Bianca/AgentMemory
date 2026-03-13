@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { config } from '../config';
-import type { AppServices } from '../app';
+import type { AppServices } from '../fastify-app';
 import { ensureAgentScope, requireAgentAuth } from '../http-auth';
 import { createId } from '../services/id';
 import type { McpQueuedEvent, McpSessionRecord, MemoryType, RecallMetadataFilters } from '../types';
@@ -240,6 +240,27 @@ function writeSseEvent(reply: FastifyReply, event: string, data: unknown, id?: s
 function readLastEventId(request: FastifyRequest): string | undefined {
   const header = request.headers['last-event-id'];
   return typeof header === 'string' && header.trim() ? header.trim() : undefined;
+}
+
+function firstForwardedValue(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const first = value.split(',')[0]?.trim();
+  return first ? first : undefined;
+}
+
+function publicBaseUrl(request: FastifyRequest): { proto: string; host: string } {
+  const proto = firstForwardedValue(request.headers['x-forwarded-proto']) ?? request.protocol;
+  const host =
+    firstForwardedValue(request.headers['x-forwarded-host'])
+    ?? (typeof request.headers.host === 'string' ? request.headers.host : undefined)
+    ?? request.hostname;
+
+  return { proto, host };
 }
 
 function queueSessionEvent(session: McpSessionRecord, payload: unknown): McpQueuedEvent {
@@ -603,7 +624,8 @@ export async function registerMcpRoutes(app: FastifyInstance, services: AppServi
       return;
     }
 
-    const endpoint = `${request.protocol}://${request.hostname}${request.url.split('?')[0]}`;
+    const { proto, host } = publicBaseUrl(request);
+    const endpoint = `${proto}://${host}${request.url.split('?')[0]}`;
     startSse(reply, { 'Mcp-Session-Id': session.id });
     writeSseEvent(reply, 'endpoint', endpoint);
     for (const event of replayableEvents(session, readLastEventId(request))) {

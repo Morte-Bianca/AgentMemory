@@ -1,4 +1,4 @@
-import { buildApp } from './app';
+import { buildApp } from './fastify-app';
 import { config } from './config';
 
 async function start() {
