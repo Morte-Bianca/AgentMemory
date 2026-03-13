@@ -241,6 +241,10 @@ npm start
 
 Docker ile public (geçici) deploy için: [docs/docker-public-deploy.md](docs/docker-public-deploy.md)
 
+## Vercel (public test)
+
+Vercel web arayüzü ile deploy için: [docs/vercel-deploy.md](docs/vercel-deploy.md)
+
 ## Test
 
 ```bash
