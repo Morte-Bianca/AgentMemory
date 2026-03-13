@@ -1,6 +1,10 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/entry?path=$1" }
+  "routes": [
+    { "src": "/health", "dest": "/api/entry?path=health" },
+    { "src": "/v1/(.*)", "dest": "/api/entry?path=v1/$1" },
+    { "src": "/api/(entry|index)", "dest": "/api/entry" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
