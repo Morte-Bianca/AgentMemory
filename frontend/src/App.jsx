@@ -2,12 +2,14 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import AuthGuard from './components/AuthGuard';
+import SessionGuard from './components/SessionGuard';
 import { UIProvider } from './components/UIContext';
 
 import Landing from './pages/Landing';
 import Docs from './pages/Docs';
 import ForAgents from './pages/ForAgents';
 import Login from './pages/Login';
+import Account from './pages/Account';
 import Dashboard from './pages/Dashboard';
 import Memories from './pages/Memories';
 import Dreams from './pages/Dreams';
@@ -22,6 +24,11 @@ function App() {
           <Route path="/docs" element={<Docs />} />
           <Route path="/for-agents" element={<ForAgents />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/account" element={
+            <SessionGuard>
+              <Account />
+            </SessionGuard>
+          } />
           
           <Route path="/app" element={
             <AuthGuard>

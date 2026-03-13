@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Key, Activity, Database, Hash, RefreshCw, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { client } from '../api/client';
 import { useUI } from '../components/useUI';
 
@@ -59,6 +59,11 @@ const Dashboard = () => {
       <header style={{ marginBottom: 40, borderBottom: '1px solid var(--border)', paddingBottom: 24 }}>
         <h1 style={{ fontSize: 48, marginBottom: 8, letterSpacing: '-0em' }}>AGENT DASHBOARD</h1>
         <p className="text-muted text-sm" style={{ textTransform: 'uppercase' }}>Overview of core memory functions and connection status.</p>
+        <div style={{ marginTop: 16 }}>
+          <Link to="/account" className="btn" style={{ textDecoration: 'none' }}>
+            MANAGE ACCOUNT
+          </Link>
+        </div>
       </header>
 
       <div className="grid-container">

@@ -4,7 +4,7 @@ import { client } from '../api/client';
 
 const AuthGuard = ({ children }) => {
   if (!client.apiKey) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={client.sessionToken ? '/account' : '/login'} replace />;
   }
   return children;
 };

@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Fingerprint, Plus } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { client } from '../api/client';
 
 const Login = () => {
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const [user, setUser] = useState(client.user);
@@ -14,13 +12,14 @@ const Login = () => {
 
   useEffect(() => {
     if (client.apiKey) {
-      navigate('/app', { replace: true });
+      navigate('/app/dashboard', { replace: true });
       return;
     }
 
     if (client.sessionToken) {
       client.getAuthMe().then((data) => {
         setUser(data.user);
+        navigate('/', { replace: true });
       }).catch((err) => {
         client.clearSession();
         setError(err.message);
@@ -47,6 +46,7 @@ const Login = () => {
         try {
           const data = await client.loginWithGoogle(response.credential);
           setUser(data.user);
+          navigate('/', { replace: true });
         } catch (err) {
           setError(err.message);
         } finally {
@@ -65,25 +65,6 @@ const Login = () => {
     });
   }, []);
 
-  const handleCreateAgent = async (e) => {
-    e.preventDefault();
-    if (!client.sessionToken) {
-      setError('Sign in with Google first.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-
-    try {
-      await client.initializeIdentity(name || undefined);
-      navigate('/app');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="flex-center" style={{ minHeight: '100vh', padding: 20 }}>
       <div className="brutalist-panel" style={{ width: '100%', maxWidth: 420 }}>
@@ -95,8 +76,8 @@ const Login = () => {
           }}>
             <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 56, height: 56, filter: 'invert(1)' }} />
           </div>
-          <h2 style={{ fontSize: 32 }}>INITIALIZE AGENT</h2>
-          <p className="text-muted" style={{ marginTop: 8, fontSize: 13, textTransform: 'uppercase' }}>SIGN IN WITH GOOGLE, THEN ISSUE AN API KEY FOR YOUR AGENT</p>
+          <h2 style={{ fontSize: 32 }}>LOGIN</h2>
+          <p className="text-muted" style={{ marginTop: 8, fontSize: 13, textTransform: 'uppercase' }}>SIGN IN WITH GOOGLE FIRST. AGENT INITIALIZATION IS MANAGED SEPARATELY IN YOUR ACCOUNT.</p>
         </div>
 
         {error && (
@@ -117,6 +98,9 @@ const Login = () => {
               <div className="text-muted text-sm" style={{ marginBottom: 8, textTransform: 'uppercase' }}>Signed in</div>
               <div style={{ fontWeight: 700 }}>{user.name}</div>
               <div className="text-muted text-sm" style={{ marginTop: 4 }}>{user.email}</div>
+              <button className="btn btn-primary" style={{ width: '100%', marginTop: 16 }} onClick={() => navigate('/account')}>
+                <ShieldCheck size={18} /> OPEN ACCOUNT
+              </button>
             </div>
           ) : (
             <>
@@ -126,28 +110,9 @@ const Login = () => {
           )}
         </div>
 
-        <form onSubmit={handleCreateAgent}>
-          <div className="input-group">
-            <label className="input-label">AGENT DESIGNATION (OPTIONAL)</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="e.g. CLAW-007"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ width: '100%', marginTop: 24, padding: 16, fontSize: 16 }}
-            disabled={loading || !client.sessionToken}
-          >
-            {loading ? <Fingerprint className="animate-pulse" /> : <Plus />}
-            {loading ? 'INITIALIZING CORE...' : 'INITIALIZE IDENTITY'}
-          </button>
-        </form>
+        <button className="btn" style={{ width: '100%' }} onClick={() => navigate('/')}>
+          <ArrowLeft size={18} /> BACK TO HOME
+        </button>
       </div>
     </div>
   );

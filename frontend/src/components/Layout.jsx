@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Database, Moon, LogOut, Code2, Network } from 'lucide-react';
+import { Database, Moon, LogOut, Code2, Network, UserCircle2 } from 'lucide-react';
 import { client } from '../api/client';
 
 const Layout = () => {
@@ -20,6 +20,9 @@ const Layout = () => {
         </div>
 
         <nav style={{ flex: 1 }}>
+          <NavLink to="/account" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <UserCircle2 size={20} /> Account
+          </NavLink>
           <NavLink to="/app/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Code2 size={20} /> Dashboard
           </NavLink>
