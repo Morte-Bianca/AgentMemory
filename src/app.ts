@@ -5,4 +5,9 @@
 //
 // The Fastify app builder lives in `src/fastify-app.ts`.
 
+// Vercel's Fastify framework detection expects an entrypoint file to import `fastify` directly.
+// This import is intentionally unused at runtime.
+import Fastify from 'fastify';
+void Fastify;
+
 export { default } from '../api/index';
