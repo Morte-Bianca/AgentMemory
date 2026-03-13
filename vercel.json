@@ -1,12 +1,13 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/entry.ts", "use": "@vercel/node" },
+    { "src": "api/health.ts", "use": "@vercel/node" },
+    { "src": "api/v1/[...path].ts", "use": "@vercel/node" },
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "public" } }
   ],
   "routes": [
-    { "src": "/health", "dest": "/api/entry?path=health" },
-    { "src": "/v1/(.*)", "dest": "/api/entry?path=v1/$1" },
+    { "src": "/health", "dest": "/api/health" },
+    { "src": "/v1/(.*)", "dest": "/api/v1/$1" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
