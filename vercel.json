@@ -1,13 +1,10 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/health.ts", "use": "@vercel/node" },
-    { "src": "api/v1/[...path].ts", "use": "@vercel/node" },
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "public" } }
-  ],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "routes": [
     { "src": "/health", "dest": "/api/health" },
-    { "src": "/v1/(.*)", "dest": "/api/v1/$1" },
+    { "src": "/v1/(.*)", "dest": "/api/v1?path=$1" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
