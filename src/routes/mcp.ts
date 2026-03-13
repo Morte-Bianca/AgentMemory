@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { config } from '../config';
-import type { AppServices } from '../app';
+import type { AppServices } from '../fastify-app';
 import { ensureAgentScope, requireAgentAuth } from '../http-auth';
 import { createId } from '../services/id';
 import type { McpQueuedEvent, McpSessionRecord, MemoryType, RecallMetadataFilters } from '../types';

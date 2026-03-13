@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { FastifyInstance } from 'fastify';
-import { buildApp } from '../src/app';
+import { buildApp } from '../src/fastify-app';
 
 let appPromise: Promise<FastifyInstance> | null = null;
 

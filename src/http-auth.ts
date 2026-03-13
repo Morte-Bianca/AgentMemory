@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { AgentRecord } from './types';
-import type { AppServices } from './app';
+import type { AppServices } from './fastify-app';
 import { config } from './config';
 
 function readApiKey(request: FastifyRequest): string | null {

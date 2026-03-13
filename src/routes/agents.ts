@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { AppServices } from '../app';
+import type { AppServices } from '../fastify-app';
 import { requireAgentAuth, toPublicAgent } from '../http-auth';
 
 const createAgentSchema = z.object({

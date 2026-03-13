@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { config } from '../config';
-import type { AppServices } from '../app';
+import type { AppServices } from '../fastify-app';
 import { ensureAgentScope, requireAgentAuth } from '../http-auth';
 
 const runDreamSchema = z.object({
