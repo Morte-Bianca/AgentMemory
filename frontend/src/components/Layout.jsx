@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Database, Moon, LogOut, Code2, Network } from 'lucide-react';
+import { Database, Moon, LogOut, Code2, Network } from 'lucide-react';
 import { client } from '../api/client';
 
 const Layout = () => {
@@ -15,8 +15,8 @@ const Layout = () => {
     <div className="app-layout">
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <BrainCircuit className="sidebar-logo-icon" size={28} />
-          <span>Dreams Catcher</span>
+          <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 40, height: 40 }} className="sidebar-logo-icon" />
+          <span>Dream Catcher</span>
         </div>
 
         <nav style={{ flex: 1 }}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrainCircuit, AppWindow, ArrowRight, Code, Terminal, Database, Shield, Bolt, Network, Layers } from 'lucide-react';
+import { AppWindow, ArrowRight, Code, Terminal, Database, Shield, Bolt, Network, Layers } from 'lucide-react';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -26,9 +26,9 @@ const Landing = () => {
 
       {/* Navigation */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-          <BrainCircuit size={32} />
-          Dreams Catcher AI
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+          <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 48, height: 48 }} />
+          Dream Catcher AI
         </div>
         <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
           <button className="btn" onClick={() => navigate('/docs')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none' }}>Docs</button>
@@ -56,7 +56,7 @@ const Landing = () => {
             letterSpacing: '0em',
             wordBreak: 'break-word'
           }}>
-            The Memory<br />Engine<br />For Agents
+            The Dream<br />Engine<br />For Agents
           </h1>
           
           <p style={{ 
@@ -69,7 +69,7 @@ const Landing = () => {
             borderLeft: '2px solid var(--text-main)',
             paddingLeft: 24
           }}>
-            HTTP-driven episodic and semantic memory pipeline. Streamable MCP Bridge integration. Deterministic Hybrid Vector Recall powered by pgvector.
+          Streamable MCP Bridge integration. Deterministic Hybrid Vector Recall powered by pgvector.
           </p>
 
           <div style={{ 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrainCircuit, Book, Database, Terminal, Moon, Network } from 'lucide-react';
+import { Book, Database, Terminal, Moon, Network } from 'lucide-react';
 
 const Docs = () => {
   const navigate = useNavigate();
@@ -24,17 +24,17 @@ const Docs = () => {
         color: 'var(--text-muted)'
       }}>
         <span>SYS.DOCS: <span style={{color: 'var(--text-main)'}}>PUBLIC_ACCESS</span></span>
-        <span>NODE: DREAMS_CATCHER_DOCS</span>
+        <span>NODE: DREAM_CATCHER_DOCS</span>
       </div>
 
       {/* Navigation */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
         <div 
           onClick={() => navigate('/')}
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}
         >
-          <BrainCircuit size={32} />
-          Dreams Catcher AI
+          <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 48, height: 48 }} />
+          Dream Catcher AI
         </div>
         <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
           <button className="btn" onClick={() => navigate('/docs')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none', background: 'var(--text-main)', color: 'var(--bg-color)' }}>Docs</button>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Key, Activity, Database, BrainCircuit, Hash, RefreshCw, Trash2 } from 'lucide-react';
+import { Key, Activity, Database, Hash, RefreshCw, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { client } from '../api/client';
 import { useUI } from '../components/useUI';
@@ -67,7 +67,7 @@ const Dashboard = () => {
         <div className="brutalist-panel">
           <div className="flex-between" style={{ marginBottom: 20 }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BrainCircuit className="text-muted" size={20} /> IDENTITY
+              <img src="/dream-logo-2.svg" alt="Logo" style={{ width: 20, height: 20, filter: 'grayscale(1) brightness(0.7)' }} /> IDENTITY
             </h3>
             <span style={{ padding: '4px 12px', border: '1px solid var(--primary)', color: 'var(--bg-color)', background: 'var(--primary)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>
               ONLINE

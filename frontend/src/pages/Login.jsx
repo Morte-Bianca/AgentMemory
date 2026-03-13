@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrainCircuit, Fingerprint, Plus } from 'lucide-react';
+import { Fingerprint, Plus } from 'lucide-react';
 import { client } from '../api/client';
 
 const Login = () => {
@@ -34,7 +34,7 @@ const Login = () => {
             background: 'var(--text-main)',
             border: '2px solid var(--text-main)'
           }}>
-            <BrainCircuit size={40} color="var(--bg-color)" />
+            <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 56, height: 56, filter: 'invert(1)' }} />
           </div>
           <h2 style={{ fontSize: 32 }}>INITIALIZE AGENT</h2>
           <p className="text-muted" style={{ marginTop: 8, fontSize: 13, textTransform: 'uppercase' }}>CONNECT TO THE HTTP MEMORY API</p>

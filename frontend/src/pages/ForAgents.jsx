@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrainCircuit, Bolt, Shield, Code2, Network, Check, ArrowRight, Zap, Target } from 'lucide-react';
+import { Bolt, Shield, Code2, Network, Check, ArrowRight, Zap, Target } from 'lucide-react';
 
 const ForAgents = () => {
   const navigate = useNavigate();
@@ -29,9 +29,9 @@ const ForAgents = () => {
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
         <div 
           onClick={() => navigate('/')}
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}
         >
-          <BrainCircuit size={32} />
+          <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 48, height: 48 }} />
           Dream Catcher AI
         </div>
         <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
