@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Plus, Loader, Database, ChevronDown } from 'lucide-react';
 import { client } from '../api/client';
 import { useUI } from '../components/useUI';
@@ -58,6 +58,28 @@ const Memories = () => {
   const [adding, setAdding] = useState(false);
   const { showAlert } = useUI();
 
+  useEffect(() => {
+    let active = true;
+
+    client.listMemories()
+      .then((data) => {
+        if (!active) {
+          return;
+        }
+        setMemories(data.memories || []);
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        setError(err.message);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const handleSearch = async (e) => {
     e?.preventDefault();
     if (!query) return;
@@ -84,7 +106,13 @@ const Memories = () => {
       });
       setNewMemText('');
       showAlert('MEMORY ADDED SUCCESSFULLY', 'success');
-      // Re-trigger search if query matches added content implicitly
+
+      if (query) {
+        await handleSearch();
+      } else {
+        const listData = await client.listMemories();
+        setMemories(listData.memories || []);
+      }
     } catch (err) {
       showAlert('ERROR ADDING MEMORY: ' + err.message, 'error');
     } finally {
@@ -165,7 +193,9 @@ const Memories = () => {
               <div key={mem.id} style={{ padding: 16, background: 'var(--bg-panel)', border: '1px solid var(--border)' }}>
                 <div className="flex-between" style={{ marginBottom: 12 }}>
                   <span className={`badge badge-${mem.type}`}>{mem.type}</span>
-                  <span className="text-muted text-sm" style={{ fontWeight: 700 }}>SCORE: {(mem.score * 100).toFixed(1)}%</span>
+                  <span className="text-muted text-sm" style={{ fontWeight: 700 }}>
+                    {typeof mem.score === 'number' ? `SCORE: ${(mem.score * 100).toFixed(1)}%` : new Date(mem.createdAt).toLocaleString()}
+                  </span>
                 </div>
                 <div style={{ lineHeight: 1.6, marginTop: 12 }}>{mem.content}</div>
               </div>

@@ -43,6 +43,14 @@ export class AgentClient {
     this.clearSession();
   }
 
+  requireAgentId() {
+    const agentId = this.agent?.id;
+    if (!agentId) {
+      throw new Error('Agent is not initialized. Open Account and issue an API key first.');
+    }
+    return agentId;
+  }
+
   async fetch(url, options = {}) {
     const headers = {
       'Content-Type': 'application/json',
@@ -139,7 +147,7 @@ export class AgentClient {
 
   async rotateApiKey() {
     const data = await this.fetch('/v1/agents/me/api-key/rotate', { method: 'POST' });
-    this.setCredentials(this.agent, data.apiKey);
+    this.setCredentials(data.agent || this.agent, data.apiKey);
     return data;
   }
 
@@ -150,51 +158,75 @@ export class AgentClient {
 
   // --- Sessions ---
   async getSessions() {
-    return this.fetch(`/v1/agents/${this.agent?.id}/sessions`);
+    return this.fetch(`/v1/agents/${this.requireAgentId()}/sessions`);
   }
 
   // --- Memory ---
   async getMemoryStats() {
-    return this.fetch(`/v1/agents/${this.agent.id}/memories/stats`);
+    const data = await this.fetch(`/v1/agents/${this.requireAgentId()}/memories/stats`);
+    return data.stats || { total: 0, byType: {} };
   }
 
   async addMemory(memoryData) {
     return this.fetch('/v1/memories', {
       method: 'POST',
-      body: JSON.stringify(memoryData)
+      body: JSON.stringify({
+        agentId: this.requireAgentId(),
+        ...memoryData,
+      })
     });
   }
 
   async recallMemories(queryData) {
     return this.fetch('/v1/memories/recall', {
       method: 'POST',
-      body: JSON.stringify(queryData)
+      body: JSON.stringify({
+        agentId: this.requireAgentId(),
+        ...queryData,
+      })
     });
+  }
+
+  async listMemories() {
+    return this.fetch(`/v1/agents/${this.requireAgentId()}/memories`);
   }
 
   // --- Dreams ---
   async runDream() {
     return this.fetch('/v1/dreams/run', {
       method: 'POST',
-      body: JSON.stringify({}) // Add empty body if needed
+      body: JSON.stringify({ agentId: this.requireAgentId() })
     });
   }
 
   async getDreams() {
-    return this.fetch(`/v1/agents/${this.agent.id}/dreams`);
+    const data = await this.fetch(`/v1/agents/${this.requireAgentId()}/dreams`);
+    return { dreams: data.dreamRuns || [] };
   }
 
   // --- Dream Schedule ---
   async getDreamSchedule() {
-    return this.fetch('/v1/dreams/schedule');
+    const data = await this.fetch('/v1/dreams/schedule');
+    const schedules = data.schedules || [];
+    return {
+      schedules,
+      current: schedules[0] || null,
+      enabled: Boolean(schedules[0]?.active),
+    };
   }
 
   async startDreamSchedule() {
-    return this.fetch('/v1/dreams/schedule/start', { method: 'POST' });
+    return this.fetch('/v1/dreams/schedule/start', {
+      method: 'POST',
+      body: JSON.stringify({ agentId: this.requireAgentId() }),
+    });
   }
 
   async stopDreamSchedule() {
-    return this.fetch('/v1/dreams/schedule/stop', { method: 'POST' });
+    return this.fetch('/v1/dreams/schedule/stop', {
+      method: 'POST',
+      body: JSON.stringify({ agentId: this.requireAgentId() }),
+    });
   }
 }
 

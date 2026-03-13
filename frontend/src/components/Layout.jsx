@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Database, Moon, LogOut, Code2, Network, UserCircle2 } from 'lucide-react';
 import { client } from '../api/client';
 
@@ -14,10 +14,10 @@ const Layout = () => {
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <div className="sidebar-logo">
+        <Link to="/" className="sidebar-logo" style={{ textDecoration: 'none', color: 'inherit' }}>
           <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 40, height: 40 }} className="sidebar-logo-icon" />
           <span>Dream Catcher</span>
-        </div>
+        </Link>
 
         <nav style={{ flex: 1 }}>
           <NavLink to="/account" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>

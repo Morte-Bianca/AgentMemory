@@ -13,6 +13,7 @@ const Dreams = () => {
 
   const fetchDreamsAndSchedule = async () => {
     setLoading(true);
+    setError('');
     try {
       const [dreamsData, scheduleData] = await Promise.all([
         client.getDreams(),
@@ -49,8 +50,10 @@ const Dreams = () => {
     try {
       if (schedule?.enabled) {
         await client.stopDreamSchedule();
+        showAlert('Dream schedule stopped.', 'success');
       } else {
         await client.startDreamSchedule();
+        showAlert('Dream schedule started.', 'success');
       }
       fetchDreamsAndSchedule();
     } catch (err) {
@@ -82,6 +85,12 @@ const Dreams = () => {
           <p className="text-sm text-muted" style={{ marginTop: 8, textTransform: 'uppercase' }}>
             When enabled, the server will autonomously synthesize memories while the agent is idle.
           </p>
+          {schedule?.current && (
+            <p className="text-sm text-muted" style={{ marginTop: 8, textTransform: 'uppercase' }}>
+              Interval: {Math.round((schedule.current.intervalMs || 0) / 60000)} min
+              {schedule.current.lastRunAt ? ` · Last run: ${new Date(schedule.current.lastRunAt).toLocaleString()}` : ''}
+            </p>
+          )}
         </div>
         <button onClick={toggleSchedule} className="btn" style={{ borderColor: schedule?.enabled ? 'var(--primary)' : 'var(--text-muted)', color: schedule?.enabled ? 'var(--bg-color)' : 'var(--text-main)', background: schedule?.enabled ? 'var(--primary)' : 'transparent' }}>
           {schedule?.enabled ? 'STOP SCHEDULE' : 'START SCHEDULE'}
@@ -111,9 +120,14 @@ const Dreams = () => {
                 <div className="text-sm">
                   <span className="text-muted" style={{ textTransform: 'uppercase' }}>GENERATED: </span>
                   <strong>{dream?.stats?.generatedMemories || 0}</strong> MEMORIES 
-                  <span className="text-muted ml-4" style={{ marginLeft: 16, textTransform: 'uppercase' }}> EPISODES SELECTED: </span>
-                  <strong>{dream?.stats?.selectedEpisodes || 0}</strong>
+                  <span className="text-muted ml-4" style={{ marginLeft: 16, textTransform: 'uppercase' }}> SOURCE MEMORIES: </span>
+                  <strong>{dream?.sourceMemoryIds?.length || 0}</strong>
                 </div>
+                {dream.notes?.length > 0 && (
+                  <div className="text-sm text-muted" style={{ marginTop: 10, lineHeight: 1.6 }}>
+                    {dream.notes.join(' · ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
