@@ -26,8 +26,7 @@ Vercel Dashboard → Project → **Settings** → **Environment Variables**
 
 ### Minimum (public test, auth kapalı)
 
-- `REQUIRE_API_KEY` = `false`
-- `PUBLIC_AGENT_NAME` = `__public__`
+- `TEST_MODE` = `true`
 
 Storage için iki seçenek:
 
@@ -40,7 +39,17 @@ A) **Hızlı test (ephemeral)**
 
 B) **Kalıcı test (önerilen)**
 - `STORAGE_DRIVER` = `postgres`
-- `DATABASE_URL` = `postgres://...`
+- `DATABASE_URL` = `postgres://...` (opsiyonel)
+
+> Not: Vercel Postgres entegrasyonu kullanıyorsan genelde `POSTGRES_URL` / `POSTGRES_PRISMA_URL` otomatik gelir.
+> Bu repo `DATABASE_URL` yoksa bu env'leri otomatik kullanır.
+
+Vercel Postgres'ı UI üzerinden bağlamak için:
+
+1. Vercel Dashboard → Project → **Storage**
+2. **Create Database** → **Postgres**
+3. DB'yi projeye bağla (Vercel env'leri otomatik ekler)
+4. Projede yalnızca `STORAGE_DRIVER=postgres` set etmen genelde yeterli olur
 
 MCP tarafı için (browser/remote client testlerinde):
 - `MCP_ALLOWED_ORIGINS` = `*` (sadece test için)
@@ -72,5 +81,5 @@ MCP endpoint:
 ## 6) Önemli notlar
 
 - Public test modunda herkes aynı shared agent üstünden yazar/okur.
-- Gerçek kullanım için `REQUIRE_API_KEY=true` ve **mutlaka** `STORAGE_DRIVER=postgres` önerilir.
+- Gerçek kullanım için `TEST_MODE=false` ve **mutlaka** `STORAGE_DRIVER=postgres` önerilir.
 - SSE cevapları (MCP) kısa-lived olduğu için Vercel'de genelde sorunsuzdur; yine de bazı client'larda proxy/edge davranışları nedeniyle `Accept: application/json` ile devam etmek daha stabil olabilir.

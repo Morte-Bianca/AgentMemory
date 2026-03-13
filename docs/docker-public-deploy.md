@@ -2,7 +2,7 @@
 
 Bu doküman, AgentMemory'yi Docker ile public erişilebilir şekilde çalıştırmak için minimum adımları verir.
 
-> Uyarı: `REQUIRE_API_KEY=false` herkesin aynı "public agent" üzerinden memory yazıp okumasına izin verir.
+> Uyarı: `TEST_MODE=true` herkesin aynı "public agent" üzerinden memory yazıp okumasına izin verir.
 > Bu sadece kısa süreli test içindir.
 
 ## 1) Docker Compose ile çalıştır
@@ -16,7 +16,7 @@ docker compose up -d --build
 Servis:
 
 - HTTP: `http://<SUNUCU_IP>:3000`
-- Health: `GET /v1/health`
+- Health: `GET /health`
 - MCP: `POST /v1/mcp` ve `GET /v1/mcp`
 
 Veri kalıcılığı:
@@ -27,19 +27,18 @@ Veri kalıcılığı:
 
 Compose varsayılanında public test modu açıktır:
 
-- `REQUIRE_API_KEY=false`
-- `PUBLIC_AGENT_NAME=__public__`
+- `TEST_MODE=true`
 
 Bu modda:
 
 - API key göndermeden MCP ve diğer korumalı endpoint'ler çalışır.
-- Herkes aynı agent verisini paylaşır.
+- Herkes aynı paylaşımlı agent verisini paylaşır.
 
 ## 3) Normal moda (auth açık) geç
 
 `docker-compose.yml` içinde:
 
-- `REQUIRE_API_KEY: "true"`
+- `TEST_MODE: "false"`
 
 Sonra yeniden başlat:
 

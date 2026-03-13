@@ -11,13 +11,33 @@ function splitCsv(value?: string): string[] {
     .filter(Boolean);
 }
 
+function readBool(value: string | undefined, defaultValue: boolean): boolean {
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true' || normalized === '1' || normalized === 'yes') {
+    return true;
+  }
+  if (normalized === 'false' || normalized === '0' || normalized === 'no') {
+    return false;
+  }
+
+  return defaultValue;
+}
+
 export const config = {
   port: Number(process.env.PORT || 3000),
   host: process.env.HOST || '0.0.0.0',
-  requireApiKey: (process.env.REQUIRE_API_KEY ?? 'true').toLowerCase() !== 'false',
-  publicAgentName: process.env.PUBLIC_AGENT_NAME || '__public__',
+  testMode: readBool(process.env.TEST_MODE, false),
   storageDriver: (process.env.STORAGE_DRIVER || 'file') as 'file' | 'postgres',
-  databaseUrl: process.env.DATABASE_URL || '',
+  databaseUrl:
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    '',
   embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS || 128),
   dreamProvider: (process.env.DREAM_PROVIDER || 'local') as 'local',
   dataFilePath: process.env.DATA_FILE_PATH || path.join(process.cwd(), 'data', 'store.json'),

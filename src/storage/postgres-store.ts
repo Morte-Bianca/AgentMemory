@@ -41,8 +41,8 @@ interface MemoryRow {
   last_accessed_at: string | Date;
   access_count: number | string;
   dream_origin_run_id: string | null;
-  embedding: string | null;
-  embedding_model: string | null;
+  embedding?: string | null;
+  embedding_model?: string | null;
 }
 
 function toVectorLiteral(values?: number[]): string | null {
@@ -86,9 +86,36 @@ function mapMemoryRow(row: MemoryRow): MemoryRecord {
     lastAccessedAt: new Date(row.last_accessed_at).toISOString(),
     accessCount: Number(row.access_count),
     dreamOriginRunId: row.dream_origin_run_id ?? undefined,
-    embedding: parseVectorLiteral(row.embedding),
+    embedding: parseVectorLiteral(row.embedding ?? null),
     embeddingModel: row.embedding_model ?? undefined,
   };
+}
+
+type MemoryEmbeddingColumnName = 'embedding' | 'embedding_vector';
+
+function inferPgSsl(databaseUrl: string): { rejectUnauthorized: boolean } | undefined {
+  try {
+    const parsed = new URL(databaseUrl);
+    const sslmode = parsed.searchParams.get('sslmode')?.toLowerCase();
+    const ssl = parsed.searchParams.get('ssl')?.toLowerCase();
+
+    const wantsSsl =
+      sslmode === 'require' ||
+      sslmode === 'verify-ca' ||
+      sslmode === 'verify-full' ||
+      ssl === 'true' ||
+      ssl === '1' ||
+      Boolean(process.env.VERCEL) ||
+      parsed.hostname.endsWith('vercel-storage.com');
+
+    if (!wantsSsl) {
+      return undefined;
+    }
+
+    return { rejectUnauthorized: false };
+  } catch {
+    return undefined;
+  }
 }
 
 interface DreamRunRow {
@@ -125,9 +152,15 @@ function mapMcpSessionRow(row: McpSessionRow): McpSessionRecord {
 export class PostgresStore implements StoreAdapter {
   private readonly pool: Pool;
   private initialized = false;
+  private readonly embeddingDimensions: number;
+  private vectorSearchColumn: MemoryEmbeddingColumnName | null = null;
+  private embeddingColumnType: 'vector' | 'text' | null = null;
+  private embeddingVectorColumnExists = false;
 
-  constructor(databaseUrl: string) {
-    this.pool = new Pool({ connectionString: databaseUrl });
+  constructor(databaseUrl: string, options?: { embeddingDimensions?: number }) {
+    const ssl = inferPgSsl(databaseUrl);
+    this.pool = new Pool({ connectionString: databaseUrl, ssl });
+    this.embeddingDimensions = options?.embeddingDimensions ?? 128;
   }
 
   async init(): Promise<void> {
@@ -136,7 +169,75 @@ export class PostgresStore implements StoreAdapter {
     }
 
     await this.pool.query(POSTGRES_SCHEMA_SQL);
+    await this.tryEnableVectorSearch();
     this.initialized = true;
+  }
+
+  private async tryEnableVectorSearch(): Promise<void> {
+    try {
+      await this.pool.query('CREATE EXTENSION IF NOT EXISTS vector;');
+    } catch {
+      // pgvector is optional; ignore if it's unavailable or disallowed.
+    }
+
+    try {
+      await this.pool.query(
+        `ALTER TABLE memories ADD COLUMN IF NOT EXISTS embedding_vector vector(${this.embeddingDimensions});`,
+      );
+    } catch {
+      // ignore
+    }
+
+    try {
+      await this.pool.query(
+        'CREATE INDEX IF NOT EXISTS idx_memories_embedding_vector_hnsw ON memories USING hnsw (embedding_vector vector_cosine_ops);',
+      );
+    } catch {
+      // ignore (index method may be unavailable depending on pgvector version)
+    }
+
+    // Determine which column we can use for vector search.
+    const columnsRes = await this.pool.query<{
+      column_name: string;
+      udt_name: string;
+    }>(
+      `SELECT column_name, udt_name
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'memories'
+         AND column_name IN ('embedding', 'embedding_vector')`,
+    );
+
+    const embedding = columnsRes.rows.find((row) => row.column_name === 'embedding');
+    const embeddingVector = columnsRes.rows.find((row) => row.column_name === 'embedding_vector');
+
+    this.embeddingVectorColumnExists = embeddingVector?.udt_name === 'vector';
+    this.embeddingColumnType = embedding?.udt_name === 'vector' ? 'vector' : embedding ? 'text' : null;
+
+    if (embeddingVector?.udt_name === 'vector') {
+      this.vectorSearchColumn = 'embedding_vector';
+    } else if (embedding?.udt_name === 'vector') {
+      this.vectorSearchColumn = 'embedding';
+    } else {
+      this.vectorSearchColumn = null;
+    }
+
+    if (this.vectorSearchColumn === 'embedding_vector') {
+      // Best-effort backfill to enable search for existing rows.
+      try {
+        if (this.embeddingColumnType === 'vector') {
+          await this.pool.query(
+            'UPDATE memories SET embedding_vector = embedding WHERE embedding_vector IS NULL AND embedding IS NOT NULL;',
+          );
+        } else {
+          await this.pool.query(
+            'UPDATE memories SET embedding_vector = embedding::vector WHERE embedding_vector IS NULL AND embedding IS NOT NULL;',
+          );
+        }
+      } catch {
+        // ignore
+      }
+    }
   }
 
   async read(): Promise<StoreData> {
@@ -231,29 +332,82 @@ export class PostgresStore implements StoreAdapter {
       }
 
       for (const memory of next.memories) {
-        await client.query(
-          `INSERT INTO memories
-             (id, agent_id, session_id, type, content, summary, tags, metadata, importance, source, created_at, last_accessed_at, access_count, dream_origin_run_id, embedding, embedding_model)
-           VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10, $11, $12, $13, $14, $15::vector, $16)`,
-          [
-            memory.id,
-            memory.agentId,
-            memory.sessionId ?? null,
-            memory.type,
-            memory.content,
-            memory.summary,
-            memory.tags,
-            JSON.stringify(memory.metadata ?? {}),
-            memory.importance,
-            memory.source,
-            memory.createdAt,
-            memory.lastAccessedAt,
-            memory.accessCount,
-            memory.dreamOriginRunId ?? null,
-            toVectorLiteral(memory.embedding),
-            memory.embeddingModel ?? null,
-          ],
-        );
+        const embeddingLiteral = toVectorLiteral(memory.embedding);
+
+        if (this.vectorSearchColumn && this.vectorSearchColumn === 'embedding') {
+          await client.query(
+            `INSERT INTO memories
+               (id, agent_id, session_id, type, content, summary, tags, metadata, importance, source, created_at, last_accessed_at, access_count, dream_origin_run_id, embedding, embedding_model)
+             VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10, $11, $12, $13, $14, $15::vector, $16)`,
+            [
+              memory.id,
+              memory.agentId,
+              memory.sessionId ?? null,
+              memory.type,
+              memory.content,
+              memory.summary,
+              memory.tags,
+              JSON.stringify(memory.metadata ?? {}),
+              memory.importance,
+              memory.source,
+              memory.createdAt,
+              memory.lastAccessedAt,
+              memory.accessCount,
+              memory.dreamOriginRunId ?? null,
+              embeddingLiteral,
+              memory.embeddingModel ?? null,
+            ],
+          );
+        } else if (this.embeddingVectorColumnExists) {
+          await client.query(
+            `INSERT INTO memories
+               (id, agent_id, session_id, type, content, summary, tags, metadata, importance, source, created_at, last_accessed_at, access_count, dream_origin_run_id, embedding, embedding_vector, embedding_model)
+             VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10, $11, $12, $13, $14, $15, $16::vector, $17)`,
+            [
+              memory.id,
+              memory.agentId,
+              memory.sessionId ?? null,
+              memory.type,
+              memory.content,
+              memory.summary,
+              memory.tags,
+              JSON.stringify(memory.metadata ?? {}),
+              memory.importance,
+              memory.source,
+              memory.createdAt,
+              memory.lastAccessedAt,
+              memory.accessCount,
+              memory.dreamOriginRunId ?? null,
+              embeddingLiteral,
+              embeddingLiteral,
+              memory.embeddingModel ?? null,
+            ],
+          );
+        } else {
+          await client.query(
+            `INSERT INTO memories
+               (id, agent_id, session_id, type, content, summary, tags, metadata, importance, source, created_at, last_accessed_at, access_count, dream_origin_run_id, embedding, embedding_model)
+             VALUES ($1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10, $11, $12, $13, $14, $15, $16)`,
+            [
+              memory.id,
+              memory.agentId,
+              memory.sessionId ?? null,
+              memory.type,
+              memory.content,
+              memory.summary,
+              memory.tags,
+              JSON.stringify(memory.metadata ?? {}),
+              memory.importance,
+              memory.source,
+              memory.createdAt,
+              memory.lastAccessedAt,
+              memory.accessCount,
+              memory.dreamOriginRunId ?? null,
+              embeddingLiteral,
+              memory.embeddingModel ?? null,
+            ],
+          );
+        }
       }
 
       for (const dreamRun of next.dreamRuns) {
@@ -347,31 +501,32 @@ export class PostgresStore implements StoreAdapter {
 
     const vectorLimitParam = addParam(input.limit);
     const metadataLimitParam = addParam(input.limit);
-    const vectorConditions = [...baseConditions, ...metadataConditions, 'embedding IS NOT NULL', '$2::vector IS NOT NULL'];
     const metadataConditionsSql = [...baseConditions, ...metadataConditions];
     const selectorSql = selectorParts.length > 0 ? ` AND (${selectorParts.join(' OR ')})` : '';
-    const includeMetadataCandidates = metadataConditions.length > 0 || selectorParts.length > 0;
+    const includeVectorCandidates = Boolean(this.vectorSearchColumn) && Boolean(input.queryEmbedding?.length);
+    const vectorColumn = this.vectorSearchColumn;
 
     const sql = `
-      WITH vector_candidates AS (
-        SELECT id, (1 - (embedding <=> $2::vector)) AS vector_score
-        FROM memories
-        WHERE ${vectorConditions.join(' AND ')}
-        ORDER BY embedding <=> $2::vector ASC
-        LIMIT ${vectorLimitParam}
-      )${includeMetadataCandidates ? ',' : ',\n'}
-      ${includeMetadataCandidates ? `metadata_candidates AS (
+      WITH metadata_candidates AS (
         SELECT id, 0.0::double precision AS vector_score
         FROM memories
         WHERE ${metadataConditionsSql.join(' AND ')}${selectorSql}
         ORDER BY importance DESC, created_at DESC
         LIMIT ${metadataLimitParam}
-      ),` : ''}
+      )
+      ${includeVectorCandidates && vectorColumn ? `,
+      vector_candidates AS (
+        SELECT id, (1 - (${vectorColumn} <=> $2::vector)) AS vector_score
+        FROM memories
+        WHERE ${[...baseConditions, ...metadataConditions, `${vectorColumn} IS NOT NULL`, '$2::vector IS NOT NULL'].join(' AND ')}
+        ORDER BY ${vectorColumn} <=> $2::vector ASC
+        LIMIT ${vectorLimitParam}
+      )` : ''},
       merged AS (
         SELECT id, MAX(vector_score) AS vector_score
         FROM (
-          SELECT * FROM vector_candidates
-          ${includeMetadataCandidates ? 'UNION ALL\n          SELECT * FROM metadata_candidates' : ''}
+          SELECT * FROM metadata_candidates
+          ${includeVectorCandidates ? 'UNION ALL\n          SELECT * FROM vector_candidates' : ''}
         ) AS candidates
         GROUP BY id
       )

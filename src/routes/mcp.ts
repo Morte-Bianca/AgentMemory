@@ -242,6 +242,27 @@ function readLastEventId(request: FastifyRequest): string | undefined {
   return typeof header === 'string' && header.trim() ? header.trim() : undefined;
 }
 
+function firstForwardedValue(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const first = value.split(',')[0]?.trim();
+  return first ? first : undefined;
+}
+
+function publicBaseUrl(request: FastifyRequest): { proto: string; host: string } {
+  const proto = firstForwardedValue(request.headers['x-forwarded-proto']) ?? request.protocol;
+  const host =
+    firstForwardedValue(request.headers['x-forwarded-host'])
+    ?? (typeof request.headers.host === 'string' ? request.headers.host : undefined)
+    ?? request.hostname;
+
+  return { proto, host };
+}
+
 function queueSessionEvent(session: McpSessionRecord, payload: unknown): McpQueuedEvent {
   session.eventCursor += 1;
   const event: McpQueuedEvent = {
@@ -603,7 +624,8 @@ export async function registerMcpRoutes(app: FastifyInstance, services: AppServi
       return;
     }
 
-    const endpoint = `${request.protocol}://${request.hostname}${request.url.split('?')[0]}`;
+    const { proto, host } = publicBaseUrl(request);
+    const endpoint = `${proto}://${host}${request.url.split('?')[0]}`;
     startSse(reply, { 'Mcp-Session-Id': session.id });
     writeSseEvent(reply, 'endpoint', endpoint);
     for (const event of replayableEvents(session, readLastEventId(request))) {

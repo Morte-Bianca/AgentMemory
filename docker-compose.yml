@@ -8,9 +8,9 @@ services:
       PORT: 3000
       STORAGE_DRIVER: file
       DATA_FILE_PATH: /app/data/store.json
-      # Public test mode (no API key required). Flip to "true" for normal behavior.
-      REQUIRE_API_KEY: "false"
-      PUBLIC_AGENT_NAME: "__public__"
+      # Public test mode (no API key required).
+      # For normal behavior (API key required), set TEST_MODE to "false".
+      TEST_MODE: "true"
       # If you test MCP from a browser, set allowed origins.
       MCP_ALLOWED_ORIGINS: "*"
       MCP_SESSION_EVENT_LIMIT: "100"

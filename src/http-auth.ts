@@ -24,8 +24,8 @@ export async function requireAgentAuth(
 ): Promise<AgentRecord | null> {
   const apiKey = readApiKey(request);
 
-  if (!apiKey && !config.requireApiKey) {
-    return services.agents.getOrCreatePublicAgent({ name: config.publicAgentName });
+  if (!apiKey && config.testMode) {
+    return services.agents.getOrCreatePublicAgent();
   }
 
   if (!apiKey) {
@@ -35,8 +35,8 @@ export async function requireAgentAuth(
 
   const agent = await services.agents.authenticate(apiKey);
   if (!agent) {
-    if (!config.requireApiKey) {
-      return services.agents.getOrCreatePublicAgent({ name: config.publicAgentName });
+    if (config.testMode) {
+      return services.agents.getOrCreatePublicAgent();
     }
 
     await reply.status(401).send({ error: 'Invalid API key' });
@@ -55,7 +55,7 @@ export async function ensureAgentScope(
     return true;
   }
 
-  if (!config.requireApiKey && authAgent.name === config.publicAgentName) {
+  if (config.testMode && authAgent.name === '__public__') {
     await reply.status(403).send({ error: 'Anonymous access cannot target other agents' });
     return false;
   }
