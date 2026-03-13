@@ -19,5 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const parsed = new URL(req.url || '/api/v1', 'https://local.invalid');
   const path = readPath(req);
   const pathname = path ? `/v1/${path}` : '/v1';
-  await proxyToFastify(req, res, `${pathname}${parsed.search}`);
+  parsed.searchParams.delete('path');
+  const search = parsed.searchParams.toString();
+  await proxyToFastify(req, res, `${pathname}${search ? `?${search}` : ''}`);
 }
