@@ -27,6 +27,23 @@ function readBool(value: string | undefined, defaultValue: boolean): boolean {
   return defaultValue;
 }
 
+function resolveDataFilePath(): string {
+  const envPath = process.env.DATA_FILE_PATH;
+
+  if (envPath) {
+    if (process.env.VERCEL && !path.isAbsolute(envPath)) {
+      return path.posix.join('/tmp', envPath.replace(/^\.\/+/, ''));
+    }
+    return envPath;
+  }
+
+  if (process.env.VERCEL) {
+    return '/tmp/store.json';
+  }
+
+  return path.join(process.cwd(), 'data', 'store.json');
+}
+
 export const config = {
   port: Number(process.env.PORT || 3000),
   host: process.env.HOST || '0.0.0.0',
@@ -40,7 +57,7 @@ export const config = {
     '',
   embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS || 128),
   dreamProvider: (process.env.DREAM_PROVIDER || 'local') as 'local',
-  dataFilePath: process.env.DATA_FILE_PATH || path.join(process.cwd(), 'data', 'store.json'),
+  dataFilePath: resolveDataFilePath(),
   defaultDreamIntervalMs: Number(process.env.DEFAULT_DREAM_INTERVAL_MS || 1000 * 60 * 15),
   mcpSessionEventLimit: Number(process.env.MCP_SESSION_EVENT_LIMIT || 100),
   mcpSessionTtlMs: Number(process.env.MCP_SESSION_TTL_MS || 1000 * 60 * 60 * 24),
