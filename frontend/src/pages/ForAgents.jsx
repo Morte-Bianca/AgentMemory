@@ -208,9 +208,9 @@ x-api-key: <apiKey>`}
                  <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Practical Sequence</h3>
                  <ol style={{ marginLeft: 24, lineHeight: 1.9, color: 'var(--text-muted)' }}>
                    <li>Verify <code>/health</code>.</li>
-                   <li>Call <code>GET /v1/agents/me</code> with the API key.</li>
-                   <li>Store important facts with <code>POST /v1/memories</code>.</li>
-                   <li>Recall relevant state with <code>POST /v1/memories/recall</code>.</li>
+                   <li>Call <code>GET /v1/agents/me</code> with the API key and keep the returned <code>agent.id</code>.</li>
+                   <li>Store important facts with <code>POST /v1/memories</code> using that <code>agentId</code>.</li>
+                   <li>Recall relevant state with <code>POST /v1/memories/recall</code> using the same <code>agentId</code>.</li>
                    <li>Send structured workflow traces with <code>POST /v1/claw/events</code> when possible.</li>
                  </ol>
                </div>
@@ -228,7 +228,7 @@ x-api-key: <apiKey>`}
                  <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Hosted Endpoint</h3>
                  <code style={{ display: 'block', marginBottom: 8 }}>POST {baseUrl}/v1/mcp</code>
                  <code style={{ display: 'block', marginBottom: 16 }}>GET {baseUrl}/v1/mcp</code>
-                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>Every MCP request still requires the agent API key.</p>
+                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>Every MCP request still requires the agent API key. After initialize, keep sending the returned <code>Mcp-Session-Id</code> header on follow-up MCP calls.</p>
                </div>
 
                <div className="brutalist-panel" style={{ marginBottom: 32 }}>
