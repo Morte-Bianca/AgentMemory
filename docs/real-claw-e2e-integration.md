@@ -111,6 +111,43 @@ Auth için desteklenen header'lar:
 - `Authorization: Bearer <apiKey>`
 - `x-api-key: <apiKey>`
 
+### 4.1 Stdio MCP (NanoClaw/SolClaw benzeri) için proxy seçeneği
+
+Bazı Claw türevleri / agent runtime'ları MCP tarafında `stdio` transport (JSON-RPC 2.0 + `Content-Length` framing) bekler.
+Bu repo'daki MCP implementasyonu ise HTTP + SSE üzerinden çalışır (`/v1/mcp`).
+
+Bu durumda köprü olarak `stdio MCP ⇄ HTTP MCP proxy` kullanabilirsin:
+
+- Proxy entrypoint: [src/mcp-stdio-proxy.ts](../src/mcp-stdio-proxy.ts)
+- Proxy, stdio'dan gelen MCP mesajlarını AgentMemory'nin `/v1/mcp` endpoint'ine forward eder.
+- Upstream `Mcp-Session-Id` header'ını proxy kendi içinde saklar; stdio tarafına header yansıtılmaz.
+- Her request'ten sonra proxy `GET /v1/mcp` ile queued `event: message` (notification) eventlerini çekip stdio üzerinden yayınlar.
+
+Gereken env:
+
+- `AGENTMEMORY_BASE_URL` (ör: `http://127.0.0.1:3000`)
+- `AGENTMEMORY_API_KEY` (test agent apiKey)
+- opsiyonel: `AGENTMEMORY_MCP_PATH` (varsayılan: `/v1/mcp`)
+
+Yerelde çalıştırma (dev):
+
+```bash
+AGENTMEMORY_BASE_URL=http://127.0.0.1:3000 \
+AGENTMEMORY_API_KEY=YOUR_TEST_AGENT_KEY \
+npm run mcp:stdio-proxy:dev
+```
+
+Build sonrası çalıştırma:
+
+```bash
+npm run build
+AGENTMEMORY_BASE_URL=http://127.0.0.1:3000 \
+AGENTMEMORY_API_KEY=YOUR_TEST_AGENT_KEY \
+npm run mcp:stdio-proxy
+```
+
+Not: Proxy stdout'u MCP JSON-RPC mesajları için kullanır; debug/log çıktıları stderr'dedir.
+
 ## 5. Minimum uçtan uca senaryo
 
 Aşağıdaki senaryo önce mutlaka çalıştırılmalı.
