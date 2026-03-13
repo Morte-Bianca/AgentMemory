@@ -14,6 +14,8 @@ function splitCsv(value?: string): string[] {
 export const config = {
   port: Number(process.env.PORT || 3000),
   host: process.env.HOST || '0.0.0.0',
+  requireApiKey: (process.env.REQUIRE_API_KEY ?? 'true').toLowerCase() !== 'false',
+  publicAgentName: process.env.PUBLIC_AGENT_NAME || '__public__',
   storageDriver: (process.env.STORAGE_DRIVER || 'file') as 'file' | 'postgres',
   databaseUrl: process.env.DATABASE_URL || '',
   embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS || 128),

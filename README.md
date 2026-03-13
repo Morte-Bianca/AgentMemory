@@ -70,6 +70,11 @@ API key lifecycle endpoint'leri:
 Rotation sonrası eski key anında geçersiz olur.
 Revoke sonrası mevcut key de geçersiz olur.
 
+Auth bypass (sadece test için):
+
+- `REQUIRE_API_KEY=false` ile API key göndermeden de istek atılabilir.
+- Bu modda kimliksiz istekler, `PUBLIC_AGENT_NAME` (varsayılan: `__public__`) isimli paylaşımlı bir agent üzerinden yürür.
+
 ## Claw akışı
 
 Önerilen akış:
@@ -231,6 +236,10 @@ npm run dev
 npm run build
 npm start
 ```
+
+## Docker (public test)
+
+Docker ile public (geçici) deploy için: [docs/docker-public-deploy.md](docs/docker-public-deploy.md)
 
 ## Test
 
