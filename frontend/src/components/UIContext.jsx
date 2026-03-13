@@ -1,9 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
-
-const UIContext = createContext(null);
-
-export const useUI = () => useContext(UIContext);
+import { UIContext } from './ui-context';
 
 export const UIProvider = ({ children }) => {
   const [modal, setModal] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });

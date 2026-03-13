@@ -15,7 +15,7 @@ const Login = () => {
     setError('');
 
     try {
-      const resp = await client.createAgent(name || `CLAW-${Math.floor(Math.random()*1000)}`);
+      await client.createAgent(name || `CLAW-${Math.floor(Math.random()*1000)}`);
       // Create agent sets the credentials internally
       navigate('/app');
     } catch (err) {

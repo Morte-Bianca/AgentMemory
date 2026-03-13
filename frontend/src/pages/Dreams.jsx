@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Moon, RefreshCw, Sparkles, Brain } from 'lucide-react';
 import { client } from '../api/client';
-import { useUI } from '../components/UIContext';
+import { useUI } from '../components/useUI';
 
 const Dreams = () => {
   const [dreams, setDreams] = useState([]);

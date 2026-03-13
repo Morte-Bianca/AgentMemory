@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, Loader, Database, ChevronDown } from 'lucide-react';
 import { client } from '../api/client';
-import { useUI } from '../components/UIContext';
+import { useUI } from '../components/useUI';
 
 const CustomSelect = ({ value, onChange, options }) => {
   const [open, setOpen] = useState(false);

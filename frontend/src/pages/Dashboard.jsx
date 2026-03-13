@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Key, Activity, Database, BrainCircuit, Hash, RefreshCw, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { client } from '../api/client';
-import { useUI } from '../components/UIContext';
+import { useUI } from '../components/useUI';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
