@@ -105,12 +105,22 @@ const Docs = () => {
             <div>
                <h1 style={{ fontSize: '3rem', textTransform: 'uppercase', marginBottom: 24, letterSpacing: '-0.02em', borderBottom: '4px solid var(--text-main)', display: 'inline-block', paddingBottom: 8 }}>Authentication</h1>
                <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: 40, fontFamily: 'JetBrains Mono, monospace' }}>
-                 Secure agent registration and API key lifecycle management.
+                 Base URL: https://agent-memory-five.vercel.app
                </p>
 
                <div className="brutalist-panel" style={{ marginBottom: 32 }}>
+                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Current Hosted Test Mode</h3>
+                 <p style={{ marginBottom: 12 }}>The public deployment is currently running in shared test mode.</p>
+                 <ul style={{ listStyleType: 'square', marginLeft: 24, padding: 0, color: 'var(--text-muted)', lineHeight: 1.8 }}>
+                   <li>No API key is required for testing.</li>
+                   <li>Anonymous requests use a shared public agent.</li>
+                   <li>Do not send secrets or sensitive data.</li>
+                 </ul>
+               </div>
+
+               <div className="brutalist-panel" style={{ marginBottom: 32 }}>
                  <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Headers Required</h3>
-                 <p style={{ marginBottom: 16 }}>Protected endpoints require one of the following headers:</p>
+                 <p style={{ marginBottom: 16 }}>Protected environments require one of the following headers:</p>
                  <code style={{ display: 'block', marginBottom: 8 }}>Authorization: Bearer &lt;apiKey&gt;</code>
                  <code style={{ display: 'block' }}>x-api-key: &lt;apiKey&gt;</code>
                </div>
@@ -168,7 +178,7 @@ const Docs = () => {
                     <span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: 18, fontFamily: 'JetBrains Mono, monospace' }}>POST</span>
                     <h3 style={{ textTransform: 'uppercase', margin: 0 }}>/v1/memories/recall</h3>
                  </div>
-                 <p style={{ marginBottom: 16 }}>Pipeline features Keyword + tags + recency + vector similarity via HNSW indices.</p>
+                  <p style={{ marginBottom: 16 }}>Pipeline uses hybrid scoring across text, tags, metadata, recency, and vector similarity when vector search is available.</p>
                  <p className="text-muted">You can optionally pass <code>metadataFilters</code> like <code>actor</code>, <code>intent</code>, or <code>toolName</code> to scope the recall tightly around specific workflow traces.</p>
                </div>
             </div>
@@ -257,6 +267,11 @@ const Docs = () => {
                </div>
 
                <div className="brutalist-panel">
+                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Hosted Endpoint</h3>
+                 <p style={{ marginBottom: 8 }}><code>POST https://agent-memory-five.vercel.app/v1/mcp</code></p>
+                 <p style={{ marginBottom: 16 }}><code>GET https://agent-memory-five.vercel.app/v1/mcp</code></p>
+                 <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>Use this endpoint if your Claw client supports MCP over HTTP. For stdio-only clients, use an adapter/proxy layer.</p>
+
                  <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>SSE Background Streams</h3>
                  <p style={{ marginBottom: 16, color: 'var(--text-muted)' }}>Requesting <code>Accept: text/event-stream</code> initializes queued background listeners. Emitted events include:</p>
                  <ul style={{ listStyleType: 'square', marginLeft: 24, padding: 0, color: 'var(--text-main)', lineHeight: 1.8, fontFamily: 'JetBrains Mono, monospace', fontSize: 14 }}>

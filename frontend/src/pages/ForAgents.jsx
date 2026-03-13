@@ -143,33 +143,52 @@ const ForAgents = () => {
                </p>
 
                <div className="brutalist-panel" style={{ marginBottom: 32 }}>
-                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Hosted MCP Bridge Configuration</h3>
+                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Hosted Endpoint</h3>
                  <p style={{ color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
-                   Add this JSON block strictly to your agent's MCP configuration descriptor (e.g. <code>claude_desktop_config.json</code>, <code>.cursor/mcp.json</code>, or your custom client). This configures an SSE connection mapping directly to our cloud infrastructure.
+                   Hosted base URL:
                  </p>
+                 <code style={{ display: 'block', marginBottom: 24 }}>https://agent-memory-five.vercel.app</code>
+
+                 <p style={{ color: 'var(--text-muted)', marginBottom: 24, lineHeight: 1.6 }}>
+                   Main API endpoints for Claw agents:
+                 </p>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                   <code>GET /v1/agents/me</code>
+                   <code>POST /v1/memories</code>
+                   <code>POST /v1/memories/recall</code>
+                   <code>POST /v1/claw/events</code>
+                   <code>POST /v1/claw/context</code>
+                   <code>POST /v1/mcp</code>
+                   <code>GET /v1/mcp</code>
+                 </div>
                  
                  <div style={{ background: '#000', padding: 24, border: '1px solid var(--border)', overflowX: 'auto' }}>
                    <pre style={{ margin: 0, fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--text-main)' }}>
-{`{
-  "mcpServers": {
-    "dreams-catcher": {
-      "command": "curl",
-      "args": [
-        "-N", // Essential for maintaining the stream
-        "-H", "Authorization: Bearer <YOUR_API_KEY>",
-        "-H", "Accept: text/event-stream",
-        "https://api.dreamscatcher.ai/v1/mcp"
-      ]
-    }
-  }
-}`}
+{`// HTTP MCP clients
+POST https://agent-memory-five.vercel.app/v1/mcp
+GET  https://agent-memory-five.vercel.app/v1/mcp
+
+// Current hosted deployment is in public test mode.
+// No API key is required right now.`}
                    </pre>
                  </div>
                  
                  <div style={{ marginTop: 24, padding: 16, borderLeft: '4px solid var(--primary)', background: 'rgba(251, 250, 225, 0.05)' }}>
                     <h4 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: 'var(--primary)' }}><Zap size={16} /> Important Note</h4>
-                    <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>The API key acts as your secure shard identifier. Do not check your configuration file into public source control.</p>
+                    <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>If your Claw environment supports HTTP MCP, point it directly to <code>/v1/mcp</code>. If it only supports stdio MCP, use a stdio-to-HTTP proxy/adapter in front of this endpoint.</p>
                  </div>
+               </div>
+
+               <div className="brutalist-panel">
+                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Typical Claw Flow</h3>
+                 <ol style={{ marginLeft: 24, padding: 0, lineHeight: 1.9, color: 'var(--text-muted)' }}>
+                   <li>Call <code>/v1/agents/me</code> to get the current public agent id.</li>
+                   <li>Store important traces with <code>/v1/memories</code>.</li>
+                   <li>Recall relevant memory with <code>/v1/memories/recall</code>.</li>
+                   <li>For structured tool/session traces, send events to <code>/v1/claw/events</code>.</li>
+                   <li>For assembled context, call <code>/v1/claw/context</code>.</li>
+                   <li>For MCP-native flows, connect the client to <code>/v1/mcp</code>.</li>
+                 </ol>
                </div>
             </div>
           )}
