@@ -1,0 +1,290 @@
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg-color: #0d0d0d;
+  --bg-panel: #141414;
+  --border: #262626;
+  --primary: #fbfae1;
+  --primary-hover: #e8e7ce;
+  --text-main: #fbfae1;
+  --text-muted: #888888;
+  --accent: var(--primary);
+  --danger: var(--text-main);
+  --radius: 0px; 
+  --transition: all 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+*:focus {
+  outline: none;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-family: 'Clash Display', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+h1 { font-size: 3.5rem; letter-spacing: 0.01em; font-weight: 700;  text-transform: none; }
+h2 { font-size: 2rem; text-transform: none;}
+h3 { font-size: 1.25rem; font-weight: 500;  text-transform: none;}
+
+p {
+  line-height: 1.6;
+}
+
+/* Base Panel / Card */
+.glass-panel, .brutalist-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  padding: 32px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  padding: 12px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--border);
+  color: var(--text-main);
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--bg-color);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: transparent;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.input-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.input-field {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--text-muted);
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  color: var(--text-main);
+  padding: 14px 0px;
+  border-radius: 0;
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  transition: var(--transition);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 280px;
+  background: var(--bg-color);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+}
+
+.sidebar-logo {
+  font-family: 'Clash Display', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-logo-icon {
+  color: var(--text-main);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  transition: var(--transition);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.nav-link:hover {
+  color: var(--text-main);
+  background: rgba(255,255,255,0.03);
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: var(--bg-color);
+  font-weight: 600;
+}
+
+.main-content {
+  flex: 1;
+  padding: 64px 80px;
+  overflow-y: auto;
+  max-height: 100vh;
+  background: var(--bg-color);
+}
+
+/* Utils and Layout Helpers */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-sm {
+  font-size: 12px;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.danger-text { color: var(--danger); }
+.accent-text { color: var(--accent); }
+
+/* Grid Layout for Dashboard, Dreams, Sessions */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1px; 
+  border: 1px solid var(--border);
+  background: var(--border); 
+}
+
+/* Badge replacing sleek glows with solid brutal blocks */
+.badge {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: transparent;
+  border-radius: 20px;
+}
+
+.badge-episodic { border-color: rgba(255, 255, 255, 0.2); color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+.badge-semantic { border-color: rgba(255, 255, 255, 0.2); color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+.badge-procedural { border-color: rgba(255, 255, 255, 0.2); color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+
+/* Brutalist code blocks */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+/* Animations for Toasts and Modals */
+@keyframes slideIn {
+  from { transform: translateX(20px) translateY(20px); opacity: 0; }
+  to { transform: translateX(0) translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+  border-left: 1px solid var(--border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border: 2px solid var(--bg-color);
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
