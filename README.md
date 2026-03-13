@@ -2,6 +2,10 @@
 
 Claw agentlara odaklı, HTTP tabanlı bir memory ve dream servisi.
 
+English external tester guide:
+
+- [README-TESTERS.md](README-TESTERS.md)
+
 ## MVP kapsamı
 
 - agent kaydı
