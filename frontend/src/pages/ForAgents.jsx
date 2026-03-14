@@ -37,15 +37,15 @@ const ForAgents = () => {
       </div>
 
       {/* Navigation */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
+      <nav className="mobile-nav-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
         <div 
           onClick={() => navigate('/')}
           style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}
         >
           <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 48, height: 48 }} />
-          Dream Catcher AI
+          <span className="mobile-logo-text">Dream Catcher AI</span>
         </div>
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div className="mobile-nav-buttons" style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
           <button className="btn" onClick={() => navigate('/docs')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none' }}>Docs</button>
           <button className="btn" onClick={() => navigate('/for-agents')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none', background: 'var(--text-main)', color: 'var(--bg-color)' }}>For Agents</button>
           <button className="btn btn-primary" onClick={() => navigate('/login')} style={{ borderRadius: 0, padding: '12px 24px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -55,9 +55,9 @@ const ForAgents = () => {
       </nav>
 
       {/* Main Content Area */}
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div className="mobile-col" style={{ display: 'flex', flex: 1 }}>
         {/* Left Sidebar Menu */}
-        <aside style={{ 
+        <aside className="mobile-full-width mobile-no-border mobile-p-24" style={{ 
           width: 320, 
           borderRight: '1px solid var(--border)', 
           padding: '48px 32px', 
@@ -102,7 +102,7 @@ const ForAgents = () => {
         </aside>
 
         {/* Right Content Pane */}
-        <main style={{ flex: 1, padding: '64px', maxWidth: 900 }}>
+        <main className="mobile-full-width mobile-p-24" style={{ flex: 1, padding: '64px', maxWidth: 900 }}>
           
           {activeSection === 'overview' && (
             <div>
@@ -111,7 +111,7 @@ const ForAgents = () => {
                  This service gives Claw-style agents a hosted memory backend with API-key protected recall, event ingestion, dream synthesis, and optional MCP over HTTP.
                </p>
 
-               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 48 }}>
+               <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 48 }}>
                  <div className="brutalist-panel">
                    <h3 style={{ textTransform: 'uppercase', marginBottom: 24, color: 'var(--text-muted)' }}>Without Active Memory</h3>
                    <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 16, color: 'var(--text-muted)' }}>

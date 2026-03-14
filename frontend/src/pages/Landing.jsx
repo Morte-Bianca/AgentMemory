@@ -77,12 +77,12 @@ const Landing = () => {
       </div>
 
       {/* Navigation */}
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
+      <nav className="mobile-nav-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
           <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 48, height: 48 }} />
-          Dream Catcher AI
+          <span className="mobile-logo-text">Dream Catcher AI</span>
         </div>
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div className="mobile-nav-buttons" style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
           <button className="btn" onClick={() => navigate('/docs')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none' }}>Docs</button>
           <button className="btn" onClick={() => navigate('/for-agents')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none' }}>For Agents</button>
           {sessionToken && (
@@ -95,10 +95,10 @@ const Landing = () => {
       </nav>
 
       {/* Hero Grid - Hard Asymmetrical Layout */}
-      <main style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
+      <main className="mobile-stack" style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
         
         {/* Left Side: Massive, aggressive typography */}
-        <div style={{ gridColumn: 'span 8', borderRight: '1px solid var(--border)', padding: '24px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="mobile-span-12 mobile-no-border mobile-p-24" style={{ gridColumn: 'span 8', borderRight: '1px solid var(--border)', padding: '24px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ borderBottom: '2px solid var(--text-main)', display: 'inline-block', paddingBottom: 8, marginBottom: 24, alignSelf: 'flex-start' }}>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Core Service Layer</span>
           </div>
@@ -127,23 +127,24 @@ const Landing = () => {
           Streamable MCP Bridge integration. Deterministic Hybrid Vector Recall powered by pgvector.
           </p>
 
-          <div style={{ 
+          <div className="mobile-full-width" style={{ 
             border: '1px solid var(--border)', 
             background: 'var(--bg-panel)', 
             padding: '16px 24px',
             marginBottom: 32,
             display: 'inline-block',
-            alignSelf: 'flex-start'
+            alignSelf: 'flex-start',
+            overflowX: 'hidden'
           }}>
              <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 8 }}>
                 Contract Address
              </div>
-             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 16, color: 'var(--text-main)' }}>
+             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 16, color: 'var(--text-main)', wordBreak: 'break-all' }}>
                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
              </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 16 }}>
+          <div className="mobile-col mobile-full-width" style={{ display: 'flex', gap: 16 }}>
             <button className="btn btn-primary" onClick={() => navigate(primaryAction.path)} style={{ padding: '20px 32px', fontSize: 14, display: 'flex', alignItems: 'center', gap: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               ACCESS TERMINAL <ArrowRight size={18} />
             </button>
@@ -164,8 +165,7 @@ const Landing = () => {
         </div>
 
         {/* Right Side: Brutalist Stats / Features Stack */}
-        {/* Right Side: Brutalist Stats / Features Stack */}
-        <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column' }}>
+        <div className="mobile-span-12" style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column' }}>
           
           {/* Box 1 */}
           <div style={{ flex: 1, borderBottom: '1px solid var(--border)', padding: '24px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--bg-panel)' }}>

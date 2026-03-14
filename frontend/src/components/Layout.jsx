@@ -1,43 +1,56 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Database, Moon, LogOut, Code2, Network, UserCircle2 } from 'lucide-react';
+import { Database, Moon, LogOut, Code2, Network, UserCircle2, Menu, X } from 'lucide-react';
 import { client } from '../api/client';
 
 const Layout = () => {
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     client.clearAll();
     navigate('/login');
   };
 
+  const closeMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <Link to="/" className="sidebar-logo" style={{ textDecoration: 'none', color: 'inherit' }}>
-          <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 40, height: 40 }} className="sidebar-logo-icon" />
-          <span>Dream Catcher</span>
-        </Link>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <Link to="/" className="sidebar-logo" style={{ textDecoration: 'none', color: 'inherit' }} onClick={closeMenu}>
+            <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 40, height: 40 }} className="sidebar-logo-icon" />
+            <span>Dream Catcher</span>
+          </Link>
+          <button 
+            className="mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
 
-        <nav style={{ flex: 1 }}>
-          <NavLink to="/account" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+        <nav className={`sidebar-nav-container ${isMobileMenuOpen ? 'open' : ''}`}>
+          <NavLink to="/account" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
             <UserCircle2 size={20} /> Account
           </NavLink>
-          <NavLink to="/app/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
             <Code2 size={20} /> Dashboard
           </NavLink>
-          <NavLink to="/app/memories" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/memories" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
             <Database size={20} /> Memories
           </NavLink>
-          <NavLink to="/app/dreams" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/dreams" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
             <Moon size={20} /> Dreams
           </NavLink>
-          <NavLink to="/app/sessions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/sessions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={closeMenu}>
             <Network size={20} /> Sessions
           </NavLink>
         </nav>
 
-        <div style={{ padding: '16px 0', borderTop: '1px solid var(--border)' }}>
+        <div className={`sidebar-user-section ${isMobileMenuOpen ? 'open' : ''}`} style={{ padding: '16px 0', borderTop: '1px solid var(--border)' }}>
           <div className="nav-link" style={{ marginBottom: 12, cursor: 'default' }}>
             <div style={{ width: 8, height: 8, background: 'var(--text-main)', border: '1px solid var(--text-main)' }}/>
             <span className="text-sm">{client.agent?.name || 'AGENT CONNECTED'}</span>

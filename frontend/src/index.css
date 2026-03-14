@@ -288,3 +288,162 @@ code {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  /* Global Resets for Mobile */
+  h1 { font-size: 2.5rem !important; }
+  h2 { font-size: 1.75rem !important; }
+  h3 { font-size: 1.25rem !important; }
+  
+  .brutalist-panel {
+    padding: 16px !important;
+  }
+
+  /* Layout container fixes */
+  .app-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .sidebar-logo {
+    margin-bottom: 0 !important;
+  }
+
+  .sidebar-nav-container {
+    width: 100%;
+    display: none; /* Hidden by default on mobile */
+    flex-direction: column;
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .sidebar-nav-container.open {
+    display: flex;
+  }
+
+  .sidebar-user-section {
+    width: 100%;
+    margin-top: 16px;
+    display: none;
+  }
+
+  .sidebar-user-section.open {
+    display: block;
+  }
+
+  /* Hamburger Menu Button */
+  .mobile-menu-btn {
+    display: flex !important;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 8px;
+    cursor: pointer;
+  }
+
+  .mobile-no-border {
+    border: none !important;
+    border-right: none !important;
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+
+  .main-content {
+    padding: 24px 16px;
+  }
+
+  /* Mobile Utility Classes */
+  .mobile-col {
+    flex-direction: column !important;
+  }
+  
+  .mobile-col-reverse {
+    flex-direction: column-reverse !important;
+  }
+
+  .mobile-stack {
+    grid-template-columns: 1fr !important;
+    grid-column: span 12 !important;
+  }
+  
+  .mobile-span-12 {
+    grid-column: span 12 !important;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  .mobile-nav-wrap {
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+
+  .mobile-nav-buttons {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  .mobile-logo-text {
+    font-size: 1.25rem !important;
+    text-align: center !important;
+  }
+
+  .mobile-p-16 {
+    padding: 16px !important;
+  }
+
+  .mobile-p-24 {
+    padding: 24px !important;
+  }
+
+  .mobile-text-center {
+    text-align: center !important;
+    align-self: center !important;
+    align-items: center !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .mobile-gap-4 {
+    gap: 4px !important;
+  }
+  .mobile-gap-8 {
+    gap: 8px !important;
+  }
+  .mobile-gap-16 {
+    gap: 16px !important;
+  }
+  
+  .btn {
+    padding: 10px 16px;
+  }
+}
+
+/* Hide hamburger on desktop */
+.mobile-menu-btn {
+  display: none;
+}

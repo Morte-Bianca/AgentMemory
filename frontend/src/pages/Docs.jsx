@@ -44,11 +44,13 @@ const sectionIds = [
 ];
 
 const EndpointList = ({ items }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
     {items.map(([method, path, description]) => (
-      <div key={`${method}-${path}`} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-        <span style={{ color: 'var(--primary)', fontWeight: 700, minWidth: 44, fontFamily: 'JetBrains Mono, monospace' }}>{method}</span>
-        <code style={{ minWidth: 260 }}>{path}</code>
+      <div key={`${method}-${path}`} className="mobile-col mobile-gap-8" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ color: 'var(--primary)', fontWeight: 700, minWidth: 44, fontFamily: 'JetBrains Mono, monospace' }}>{method}</span>
+          <code style={{ wordBreak: 'break-all' }}>{path}</code>
+        </div>
         <span className="text-muted text-sm" style={{ lineHeight: 1.6 }}>{description}</span>
       </div>
     ))}
@@ -67,12 +69,12 @@ const Docs = () => {
         <span>NODE: DREAM_CATCHER_DOCS</span>
       </div>
 
-      <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
+      <nav className="mobile-nav-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 32px', borderBottom: '1px solid var(--border)' }}>
         <div onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'Clash Display', fontSize: 24, fontWeight: 700, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
           <img src="/dream-logo-2.svg" alt="Dream Catcher AI" style={{ width: 48, height: 48 }} />
-          Dream Catcher AI
+          <span className="mobile-logo-text">Dream Catcher AI</span>
         </div>
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div className="mobile-nav-buttons" style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
           <button className="btn" onClick={() => navigate('/docs')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none', background: 'var(--text-main)', color: 'var(--bg-color)' }}>Docs</button>
           <button className="btn" onClick={() => navigate('/for-agents')} style={{ padding: '12px 24px', textTransform: 'uppercase', fontSize: 13, letterSpacing: '0.04em', border: 'none' }}>For Agents</button>
           <button className="btn btn-primary" onClick={() => navigate('/login')} style={{ borderRadius: 0, padding: '12px 24px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -81,8 +83,8 @@ const Docs = () => {
         </div>
       </nav>
 
-      <div style={{ display: 'flex', flex: 1 }}>
-        <aside style={{ width: 320, borderRight: '1px solid var(--border)', padding: '48px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="mobile-col" style={{ display: 'flex', flex: 1 }}>
+        <aside className="mobile-full-width mobile-no-border mobile-p-24" style={{ width: 320, borderRight: '1px solid var(--border)', padding: '48px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontFamily: 'Clash Display', fontSize: 24, fontWeight: 600, textTransform: 'uppercase', marginBottom: 24 }}>
             Documentation
           </div>
@@ -102,7 +104,7 @@ const Docs = () => {
           })}
         </aside>
 
-        <main style={{ flex: 1, padding: '64px', maxWidth: 980 }}>
+        <main className="mobile-full-width mobile-p-24" style={{ flex: 1, padding: '64px', maxWidth: 980 }}>
           {activeSection === 'auth' && (
             <div>
               <h1 style={{ fontSize: '3rem', textTransform: 'uppercase', marginBottom: 24, letterSpacing: '-0.02em', borderBottom: '4px solid var(--text-main)', display: 'inline-block', paddingBottom: 8 }}>Authentication & Ownership</h1>
