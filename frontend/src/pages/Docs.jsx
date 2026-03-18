@@ -245,7 +245,7 @@ const Docs = () => {
               <div className="brutalist-panel">
                 <h3 style={{ textTransform: 'uppercase', marginBottom: 16 }}>Session Notes</h3>
                 <ul style={{ listStyleType: 'square', marginLeft: 24, lineHeight: 1.9, color: 'var(--text-muted)' }}>
-                  <li>The server returns <code>Mcp-Session-Id</code> on initialize.</li>
+                  <li>The server returns <code>Mcp-Session-Id</code> on initialize (response header) and also includes <code>sessionId</code> in the initialize result body for header-limited clients.</li>
                   <li>Return that same header on subsequent MCP requests.</li>
                   <li>SSE notifications include memory-stored and dream-completed events.</li>
                   <li>If you send an <code>Origin</code> header, it must be allowed by the hosted allowlist.</li>

@@ -549,6 +549,7 @@ export async function registerMcpRoutes(app: FastifyInstance, services: AppServi
       reply.header('Mcp-Session-Id', session.id);
 
       return createJsonRpcResult(id, {
+        sessionId: session.id,
         protocolVersion,
         capabilities: {
           tools: {
