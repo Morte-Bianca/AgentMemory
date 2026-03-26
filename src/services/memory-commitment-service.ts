@@ -250,7 +250,7 @@ export class MemoryCommitmentService {
       };
 
       await this.store.putMemoryCommitment(record);
-      await this.process({ memory, encrypted, record });
+      await this.process({ memory, encrypted, record, waitForEvmReceipt: shouldVerify });
 
       const commitment = await this.store.getMemoryCommitment(memory.id);
       if (!commitment) {
@@ -407,17 +407,35 @@ export class MemoryCommitmentService {
 
     const evm = commitment.evmTxHash
       ? shouldVerifyEvmViaContract
-        ? await verifyEvmContractCommit({
-            cfg: {
-              rpcUrl: config.memoryCommitments.evm.rpcUrl,
-              chainId: config.memoryCommitments.evm.chainId,
-              contractAddress: configuredEvmContract,
-            },
-            agentId,
-            memoryId,
-            expectedContentHashHex: commitment.contentHash,
-            expectedCid: commitment.cid ?? '',
-          })
+        ? await (async () => {
+            // Avoid false negatives right after submission: if receipt is missing, treat as pending.
+            const rpcUrl = config.memoryCommitments.evm.rpcUrl.trim();
+            if (rpcUrl) {
+              const { ethers } = await import('ethers');
+              const provider = config.memoryCommitments.evm.chainId
+                ? new ethers.JsonRpcProvider(rpcUrl, config.memoryCommitments.evm.chainId)
+                : new ethers.JsonRpcProvider(rpcUrl);
+              const receipt = await provider.getTransactionReceipt(commitment.evmTxHash!);
+              if (!receipt) {
+                return { ok: false, error: 'EVM transaction pending (receipt not found yet)' };
+              }
+              if ((receipt as any).status === 0) {
+                return { ok: false, error: 'EVM transaction reverted' };
+              }
+            }
+
+            return verifyEvmContractCommit({
+              cfg: {
+                rpcUrl: config.memoryCommitments.evm.rpcUrl,
+                chainId: config.memoryCommitments.evm.chainId,
+                contractAddress: configuredEvmContract,
+              },
+              agentId,
+              memoryId,
+              expectedContentHashHex: commitment.contentHash,
+              expectedCid: commitment.cid ?? '',
+            });
+          })()
         : await verifyEvmCommit({
             cfg: { rpcUrl: config.memoryCommitments.evm.rpcUrl, chainId: config.memoryCommitments.evm.chainId },
             txHash: commitment.evmTxHash,
@@ -498,7 +516,12 @@ export class MemoryCommitmentService {
     };
   }
 
-  private async process(input: { memory: MemoryRecord; encrypted: unknown; record: MemoryCommitmentRecord }) {
+  private async process(input: {
+    memory: MemoryRecord;
+    encrypted: unknown;
+    record: MemoryCommitmentRecord;
+    waitForEvmReceipt?: boolean;
+  }) {
     const { memory } = input;
     let record = input.record;
 
@@ -570,11 +593,14 @@ export class MemoryCommitmentService {
             contentHashHex: record.contentHash,
             cid: record.cid,
             memoryId: memory.id,
+            waitForReceipt: Boolean(input.waitForEvmReceipt),
+            confirmations: 1,
+            timeoutMs: 25_000,
           });
 
           record = {
             ...record,
-            evmStatus: 'submitted',
+            evmStatus: input.waitForEvmReceipt ? 'confirmed' : 'submitted',
             evmTxHash: evm.txHash,
             evmTo: evm.to,
             evmChainId: evm.chainId,
