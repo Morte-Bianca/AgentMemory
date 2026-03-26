@@ -416,8 +416,25 @@ export class MemoryCommitmentService {
                 ? new ethers.JsonRpcProvider(rpcUrl, config.memoryCommitments.evm.chainId)
                 : new ethers.JsonRpcProvider(rpcUrl);
               const receipt = await provider.getTransactionReceipt(commitment.evmTxHash!);
+              // If receipt is missing, it might still be pending OR tx could be replaced.
+              // Contract verification is the source of truth, so we only surface "pending" if
+              // the contract read also fails.
               if (!receipt) {
-                return { ok: false, error: 'EVM transaction pending (receipt not found yet)' };
+                const contractCheck = await verifyEvmContractCommit({
+                  cfg: {
+                    rpcUrl: config.memoryCommitments.evm.rpcUrl,
+                    chainId: config.memoryCommitments.evm.chainId,
+                    contractAddress: configuredEvmContract,
+                  },
+                  agentId,
+                  memoryId,
+                  expectedContentHashHex: commitment.contentHash,
+                  expectedCid: commitment.cid ?? '',
+                });
+
+                return contractCheck.ok
+                  ? contractCheck
+                  : { ok: false, error: 'EVM transaction pending (receipt not found yet)' };
               }
               if ((receipt as any).status === 0) {
                 return { ok: false, error: 'EVM transaction reverted' };
