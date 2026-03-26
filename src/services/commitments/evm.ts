@@ -8,12 +8,41 @@ export interface EvmCommitConfig {
   toAddress?: string;
 }
 
+async function waitForFinalizedTransaction(input: {
+  tx: ethers.TransactionResponse;
+  confirmations: number;
+  timeoutMs?: number;
+}): Promise<{ txHash: string; receipt: ethers.TransactionReceipt }> {
+  try {
+    const receipt = await (input.tx as any).wait(input.confirmations, input.timeoutMs);
+    if (!receipt) {
+      throw new Error('Transaction not mined (no receipt)');
+    }
+    return { txHash: input.tx.hash, receipt };
+  } catch (error: any) {
+    // Ethers can throw on replacement; capture the replacement hash + receipt when available.
+    if (error?.code === 'TRANSACTION_REPLACED' && error?.replacement) {
+      const replacement = error.replacement as ethers.TransactionResponse;
+      const receipt = (error.receipt as ethers.TransactionReceipt | undefined) ??
+        (await (replacement as any).wait(input.confirmations, input.timeoutMs));
+      if (!receipt) {
+        throw new Error('Transaction replaced but no receipt');
+      }
+      return { txHash: replacement.hash, receipt };
+    }
+    throw error;
+  }
+}
+
 export async function commitToEvm(input: {
   cfg: EvmCommitConfig;
   agentId: string;
   contentHashHex: string;
   cid: string;
   memoryId: string;
+  waitForReceipt?: boolean;
+  confirmations?: number;
+  timeoutMs?: number;
 }): Promise<{ txHash: string; to: string; chainId?: number }> {
   const rpcUrl = input.cfg.rpcUrl.trim();
   const privateKey = input.cfg.privateKey.trim();
@@ -32,6 +61,10 @@ export async function commitToEvm(input: {
 
   const wallet = new ethers.Wallet(privateKey, provider);
 
+  const confirmations = Math.max(1, Math.floor(input.confirmations ?? 1));
+  const waitForReceipt = Boolean(input.waitForReceipt);
+  const timeoutMs = input.timeoutMs;
+
   // Preferred mode: commit via registry contract
   if (contractAddress) {
     if (!/^0x[0-9a-fA-F]{40}$/.test(contractAddress)) {
@@ -49,6 +82,15 @@ export async function commitToEvm(input: {
 
     const contract = new ethers.Contract(contractAddress, abi, wallet);
     const tx = await contract.commit(input.agentId, input.memoryId, `0x${input.contentHashHex}`, input.cid);
+
+    if (waitForReceipt) {
+      const finalized = await waitForFinalizedTransaction({ tx, confirmations, timeoutMs });
+      if ((finalized.receipt as any).status === 0) {
+        throw new Error(`EVM transaction reverted: ${finalized.txHash}`);
+      }
+      return { txHash: finalized.txHash, to: contractAddress, chainId: input.cfg.chainId };
+    }
+
     return { txHash: tx.hash, to: contractAddress, chainId: input.cfg.chainId };
   }
 
@@ -63,6 +105,14 @@ export async function commitToEvm(input: {
     value: 0n,
     data,
   });
+
+  if (waitForReceipt) {
+    const finalized = await waitForFinalizedTransaction({ tx, confirmations, timeoutMs });
+    if ((finalized.receipt as any).status === 0) {
+      throw new Error(`EVM transaction reverted: ${finalized.txHash}`);
+    }
+    return { txHash: finalized.txHash, to, chainId: input.cfg.chainId };
+  }
 
   return { txHash: tx.hash, to, chainId: input.cfg.chainId };
 }
