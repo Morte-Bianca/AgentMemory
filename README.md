@@ -171,6 +171,33 @@ Elle incelemek için SQL dosyası:
 
 - [sql/postgres-schema.sql](sql/postgres-schema.sql)
 
+## Memory commitments (IPFS + EVM + Solana)
+
+İsteğe bağlı olarak her yeni memory yazımında şu 3 adım arka planda çalıştırılabilir:
+
+1. Memory payload'ı sunucuda AES-256-GCM ile şifrelenir.
+2. Şifreli blob Pinata üzerinden IPFS'e pinlenir → `CID` elde edilir.
+3. Aynı `hash + cid` hem EVM'de (data içeren 0-value tx) hem Solana'da (Memo program) zincire commit edilir.
+
+Notlar:
+
+- Bu, clude.io benzeri “plaintext'i zincire yazmadan” doğrulanabilir audit trail sağlar.
+- Uygulama kendi DB'sinde plaintext memory'yi tutmaya devam eder; zincire/IPFS'e giden kopya şifreli bir export'tur.
+- Commit işlemleri best-effort asenkron yürür; yanıt sürelerini uzatmamak için `POST /v1/memories` çağrısını bloklamaz.
+
+Gerekli env'ler için: [.env.example](.env.example) içindeki "Memory commitments" bölümüne bak.
+
+Status endpoint'leri:
+
+- `GET /v1/agents/:agentId/commitments?limit=50`
+- `GET /v1/agents/:agentId/memories/:memoryId/commitment`
+- `GET /v1/agents/:agentId/memories/:memoryId/commitment/verify`
+
+EVM/Solana on-chain registry modu:
+
+- EVM için bir registry kontratı deploy edip `EVM_CONTRACT_ADDRESS` set edersen, commit işlemleri tx `data` hack'i yerine kontratın `commit()` fonksiyonuna gider.
+- Solana için program deploy edip `SOLANA_PROGRAM_ID` set edersen, commit işlemleri Memo yerine PDA account'a yazan programa gider.
+
 ## Embeddings
 
 Servis şu an dış provider gerektirmeyen yerel bir embedding sağlayıcısı ile gelir.

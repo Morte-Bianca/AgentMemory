@@ -68,6 +68,28 @@ CREATE INDEX IF NOT EXISTS idx_memories_agent_id ON memories(agent_id);
 CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
 CREATE INDEX IF NOT EXISTS idx_memories_tags_gin ON memories USING GIN(tags);
 
+CREATE TABLE IF NOT EXISTS memory_commitments (
+  id TEXT PRIMARY KEY,
+  agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+  memory_id TEXT NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+  storage_provider TEXT NOT NULL DEFAULT 'pinata',
+  content_hash TEXT NOT NULL,
+  encrypted_hash TEXT NOT NULL,
+  cid TEXT,
+  storage_status TEXT NOT NULL,
+  evm_status TEXT NOT NULL,
+  evm_chain_id INTEGER,
+  evm_to TEXT,
+  evm_tx_hash TEXT,
+  solana_status TEXT NOT NULL,
+  solana_signature TEXT,
+  last_error TEXT,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_memory_commitments_memory_id_unique ON memory_commitments(memory_id);
+CREATE INDEX IF NOT EXISTS idx_memory_commitments_agent_id ON memory_commitments(agent_id);
+
 CREATE TABLE IF NOT EXISTS dream_runs (
   id TEXT PRIMARY KEY,
   agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,

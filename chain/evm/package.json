@@ -1,0 +1,15 @@
+{
+  "name": "agentmemory-chain-evm",
+  "private": true,
+  "version": "0.0.1",
+  "type": "commonjs",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:target": "hardhat run --network target scripts/deploy.js"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.9",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.10"
+  }
+}

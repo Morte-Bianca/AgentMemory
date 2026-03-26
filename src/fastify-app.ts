@@ -7,6 +7,7 @@ import { createStore } from './storage';
 import { AgentService } from './services/agent-service';
 import { SessionService } from './services/session-service';
 import { MemoryService } from './services/memory-service';
+import { MemoryCommitmentService } from './services/memory-commitment-service';
 import { DreamService } from './services/dream-service';
 import { DreamScheduler } from './services/dream-scheduler';
 import { ClawService } from './services/claw-service';
@@ -16,6 +17,7 @@ import { registerAuthRoutes } from './routes/auth';
 import { registerAgentRoutes } from './routes/agents';
 import { registerSessionRoutes } from './routes/sessions';
 import { registerMemoryRoutes } from './routes/memories';
+import { registerCommitmentRoutes } from './routes/commitments';
 import { registerDreamRoutes } from './routes/dreams';
 import { registerClawRoutes } from './routes/claw';
 import { registerMcpRoutes } from './routes/mcp';
@@ -26,6 +28,7 @@ export interface AppServices {
   agents: AgentService;
   sessions: SessionService;
   memories: MemoryService;
+  commitments: MemoryCommitmentService;
   dreams: DreamService;
   dreamScheduler: DreamScheduler;
   claw: ClawService;
@@ -42,7 +45,8 @@ export async function buildApp() {
   const users = new UserService(store);
   const agents = new AgentService(store);
   const sessions = new SessionService(store);
-  const memories = new MemoryService(store, embeddingProvider);
+  const commitments = new MemoryCommitmentService(store);
+  const memories = new MemoryService(store, embeddingProvider, commitments);
   const dreams = new DreamService(store, memories, dreamProvider);
   const dreamScheduler = new DreamScheduler(dreams);
   const claw = new ClawService(sessions, memories, dreams);
@@ -53,6 +57,7 @@ export async function buildApp() {
     agents,
     sessions,
     memories,
+    commitments,
     dreams,
     dreamScheduler,
     claw,
@@ -63,6 +68,7 @@ export async function buildApp() {
   await registerAgentRoutes(app, services);
   await registerSessionRoutes(app, services);
   await registerMemoryRoutes(app, services);
+  await registerCommitmentRoutes(app, services);
   await registerDreamRoutes(app, services);
   await registerClawRoutes(app, services);
   await registerMcpRoutes(app, services);

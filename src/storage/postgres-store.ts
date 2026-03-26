@@ -1,6 +1,16 @@
 import { Pool } from 'pg';
-import type { AgentRecord, DreamRunRecord, McpQueuedEvent, McpSessionRecord, MemoryRecord, SessionRecord, StoreData, UserRecord } from '../types';
-import type { SearchMemoriesInput, SearchMemoryCandidate, StoreAdapter } from './types';
+import type {
+  AgentRecord,
+  DreamRunRecord,
+  McpQueuedEvent,
+  McpSessionRecord,
+  MemoryCommitmentRecord,
+  MemoryRecord,
+  SessionRecord,
+  StoreData,
+  UserRecord,
+} from '../types';
+import type { CommitmentBackfillCandidate, SearchMemoriesInput, SearchMemoryCandidate, StoreAdapter } from './types';
 import { POSTGRES_SCHEMA_SQL } from './postgres-schema';
 
 interface AgentRow {
@@ -54,6 +64,48 @@ interface MemoryRow {
   dream_origin_run_id: string | null;
   embedding?: string | null;
   embedding_model?: string | null;
+}
+
+interface MemoryCommitmentRow {
+  id: string;
+  agent_id: string;
+  memory_id: string;
+  storage_provider: string;
+  content_hash: string;
+  encrypted_hash: string;
+  cid: string | null;
+  storage_status: MemoryCommitmentRecord['storageStatus'];
+  evm_status: MemoryCommitmentRecord['evmStatus'];
+  evm_chain_id: number | null;
+  evm_to: string | null;
+  evm_tx_hash: string | null;
+  solana_status: MemoryCommitmentRecord['solanaStatus'];
+  solana_signature: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function mapMemoryCommitmentRow(row: MemoryCommitmentRow): MemoryCommitmentRecord {
+  return {
+    id: row.id,
+    agentId: row.agent_id,
+    memoryId: row.memory_id,
+    storageProvider: row.storage_provider === 'pinata' ? 'pinata' : 'pinata',
+    contentHash: row.content_hash,
+    encryptedHash: row.encrypted_hash,
+    cid: row.cid ?? undefined,
+    storageStatus: row.storage_status,
+    evmStatus: row.evm_status,
+    evmChainId: row.evm_chain_id ?? undefined,
+    evmTo: row.evm_to ?? undefined,
+    evmTxHash: row.evm_tx_hash ?? undefined,
+    solanaStatus: row.solana_status,
+    solanaSignature: row.solana_signature ?? undefined,
+    lastError: row.last_error ?? undefined,
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString(),
+  };
 }
 
 function toVectorLiteral(values?: number[]): string | null {
@@ -254,11 +306,12 @@ export class PostgresStore implements StoreAdapter {
   async read(): Promise<StoreData> {
     await this.init();
 
-    const [usersRes, agentsRes, sessionsRes, memoriesRes, dreamRunsRes, mcpSessionsRes] = await Promise.all([
+    const [usersRes, agentsRes, sessionsRes, memoriesRes, commitmentsRes, dreamRunsRes, mcpSessionsRes] = await Promise.all([
       this.pool.query(`SELECT * FROM users ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM agents ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM sessions ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM memories ORDER BY created_at DESC`),
+      this.pool.query(`SELECT * FROM memory_commitments ORDER BY updated_at DESC`),
       this.pool.query(`SELECT * FROM dream_runs ORDER BY created_at DESC`),
       this.pool.query(`SELECT * FROM mcp_sessions ORDER BY updated_at DESC`),
     ]);
@@ -299,6 +352,10 @@ export class PostgresStore implements StoreAdapter {
 
     const memories: MemoryRecord[] = memoriesRes.rows.map((row: MemoryRow) => mapMemoryRow(row));
 
+    const memoryCommitments: MemoryCommitmentRecord[] = commitmentsRes.rows.map((row: MemoryCommitmentRow) =>
+      mapMemoryCommitmentRow(row),
+    );
+
     const dreamRuns: DreamRunRecord[] = dreamRunsRes.rows.map((row: DreamRunRow) => ({
       id: row.id,
       agentId: row.agent_id,
@@ -312,7 +369,131 @@ export class PostgresStore implements StoreAdapter {
 
     const mcpSessions: McpSessionRecord[] = mcpSessionsRes.rows.map((row: McpSessionRow) => mapMcpSessionRow(row));
 
-    return { users, agents, sessions, memories, dreamRuns, mcpSessions };
+    return { users, agents, sessions, memories, memoryCommitments, dreamRuns, mcpSessions };
+  }
+
+  async getMemoryById(memoryId: string): Promise<MemoryRecord | null> {
+    await this.init();
+    const result = await this.pool.query<MemoryRow>(`SELECT * FROM memories WHERE id = $1 LIMIT 1`, [memoryId]);
+    const row = result.rows[0];
+    return row ? mapMemoryRow(row) : null;
+  }
+
+  async listCommitmentBackfillCandidates(
+    agentId: string,
+    opts: {
+      limit: number;
+      cursor?: { createdAt: string; id: string };
+      includeFailed: boolean;
+      requireEvmTxHash: boolean;
+      requireSolanaSignature: boolean;
+    },
+  ): Promise<CommitmentBackfillCandidate[]> {
+    await this.init();
+
+    const limit = Math.max(1, Math.min(opts.limit, 50));
+    const afterCreatedAt = opts.cursor?.createdAt ?? null;
+    const afterId = opts.cursor?.id ?? '';
+
+    const params: any[] = [
+      agentId,
+      afterCreatedAt,
+      afterId,
+      opts.includeFailed,
+      opts.requireEvmTxHash,
+      opts.requireSolanaSignature,
+      limit,
+    ];
+
+    type BackfillRow = MemoryRow & {
+      mc_id: string | null;
+      mc_agent_id: string | null;
+      mc_memory_id: string | null;
+      mc_storage_provider: string | null;
+      mc_content_hash: string | null;
+      mc_encrypted_hash: string | null;
+      mc_cid: string | null;
+      mc_storage_status: MemoryCommitmentRecord['storageStatus'] | null;
+      mc_evm_status: MemoryCommitmentRecord['evmStatus'] | null;
+      mc_evm_chain_id: number | null;
+      mc_evm_to: string | null;
+      mc_evm_tx_hash: string | null;
+      mc_solana_status: MemoryCommitmentRecord['solanaStatus'] | null;
+      mc_solana_signature: string | null;
+      mc_last_error: string | null;
+      mc_created_at: string | null;
+      mc_updated_at: string | null;
+    };
+
+    const res = await this.pool.query<BackfillRow>(
+      `SELECT
+         m.*,
+         mc.id AS mc_id,
+         mc.agent_id AS mc_agent_id,
+         mc.memory_id AS mc_memory_id,
+         mc.storage_provider AS mc_storage_provider,
+         mc.content_hash AS mc_content_hash,
+         mc.encrypted_hash AS mc_encrypted_hash,
+         mc.cid AS mc_cid,
+         mc.storage_status AS mc_storage_status,
+         mc.evm_status AS mc_evm_status,
+         mc.evm_chain_id AS mc_evm_chain_id,
+         mc.evm_to AS mc_evm_to,
+         mc.evm_tx_hash AS mc_evm_tx_hash,
+         mc.solana_status AS mc_solana_status,
+         mc.solana_signature AS mc_solana_signature,
+         mc.last_error AS mc_last_error,
+         mc.created_at AS mc_created_at,
+         mc.updated_at AS mc_updated_at
+       FROM memories m
+       LEFT JOIN memory_commitments mc
+         ON mc.memory_id = m.id
+       WHERE m.agent_id = $1
+         AND ($2::timestamptz IS NULL OR (m.created_at, m.id) > ($2::timestamptz, $3::text))
+         AND (
+           mc.memory_id IS NULL
+           OR NOT (
+             mc.storage_status = 'uploaded'
+             AND mc.cid IS NOT NULL
+             AND (NOT $5::boolean OR mc.evm_tx_hash IS NOT NULL)
+             AND (NOT $6::boolean OR mc.solana_signature IS NOT NULL)
+           )
+         )
+         AND (
+           $4::boolean = TRUE
+           OR mc.memory_id IS NULL
+           OR NOT (mc.storage_status = 'failed' OR mc.evm_status = 'failed' OR mc.solana_status = 'failed')
+         )
+       ORDER BY m.created_at ASC, m.id ASC
+       LIMIT $7`,
+      params,
+    );
+
+    return res.rows.map((row) => {
+      const memory = mapMemoryRow(row);
+      const commitment = row.mc_id
+        ? mapMemoryCommitmentRow({
+            id: row.mc_id,
+            agent_id: row.mc_agent_id ?? agentId,
+            memory_id: row.mc_memory_id ?? row.id,
+            storage_provider: row.mc_storage_provider ?? 'pinata',
+            content_hash: row.mc_content_hash ?? '0'.repeat(64),
+            encrypted_hash: row.mc_encrypted_hash ?? '0'.repeat(64),
+            cid: row.mc_cid,
+            storage_status: row.mc_storage_status ?? 'pending',
+            evm_status: row.mc_evm_status ?? 'disabled',
+            evm_chain_id: row.mc_evm_chain_id,
+            evm_to: row.mc_evm_to,
+            evm_tx_hash: row.mc_evm_tx_hash,
+            solana_status: row.mc_solana_status ?? 'disabled',
+            solana_signature: row.mc_solana_signature,
+            last_error: row.mc_last_error,
+            created_at: row.mc_created_at ?? new Date().toISOString(),
+            updated_at: row.mc_updated_at ?? new Date().toISOString(),
+          })
+        : null;
+      return { memory, commitment };
+    });
   }
 
   async write(next: StoreData): Promise<void> {
@@ -323,6 +504,7 @@ export class PostgresStore implements StoreAdapter {
       await client.query('BEGIN');
       await client.query('DELETE FROM dream_runs');
       await client.query('DELETE FROM mcp_sessions');
+      await client.query('DELETE FROM memory_commitments');
       await client.query('DELETE FROM memories');
       await client.query('DELETE FROM sessions');
       await client.query('DELETE FROM agents');
@@ -443,6 +625,33 @@ export class PostgresStore implements StoreAdapter {
         }
       }
 
+      for (const record of next.memoryCommitments ?? []) {
+        await client.query(
+          `INSERT INTO memory_commitments
+             (id, agent_id, memory_id, storage_provider, content_hash, encrypted_hash, cid, storage_status, evm_status, evm_chain_id, evm_to, evm_tx_hash, solana_status, solana_signature, last_error, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+          [
+            record.id,
+            record.agentId,
+            record.memoryId,
+            record.storageProvider,
+            record.contentHash,
+            record.encryptedHash,
+            record.cid ?? null,
+            record.storageStatus,
+            record.evmStatus,
+            record.evmChainId ?? null,
+            record.evmTo ?? null,
+            record.evmTxHash ?? null,
+            record.solanaStatus,
+            record.solanaSignature ?? null,
+            record.lastError ?? null,
+            record.createdAt,
+            record.updatedAt,
+          ],
+        );
+      }
+
       for (const dreamRun of next.dreamRuns) {
         await client.query(
           `INSERT INTO dream_runs (id, agent_id, status, provider, notes, source_memory_ids, created_memory_ids, created_at)
@@ -482,6 +691,112 @@ export class PostgresStore implements StoreAdapter {
     } finally {
       client.release();
     }
+  }
+
+  async getMemoryCommitment(memoryId: string): Promise<MemoryCommitmentRecord | null> {
+    await this.init();
+    const result = await this.pool.query<MemoryCommitmentRow>(
+      `SELECT * FROM memory_commitments WHERE memory_id = $1 LIMIT 1`,
+      [memoryId],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: row.id,
+      agentId: row.agent_id,
+      memoryId: row.memory_id,
+      storageProvider: row.storage_provider === 'pinata' ? 'pinata' : 'pinata',
+      contentHash: row.content_hash,
+      encryptedHash: row.encrypted_hash,
+      cid: row.cid ?? undefined,
+      storageStatus: row.storage_status,
+      evmStatus: row.evm_status,
+      evmChainId: row.evm_chain_id ?? undefined,
+      evmTo: row.evm_to ?? undefined,
+      evmTxHash: row.evm_tx_hash ?? undefined,
+      solanaStatus: row.solana_status,
+      solanaSignature: row.solana_signature ?? undefined,
+      lastError: row.last_error ?? undefined,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    };
+  }
+
+  async putMemoryCommitment(record: MemoryCommitmentRecord): Promise<void> {
+    await this.init();
+    await this.pool.query(
+      `INSERT INTO memory_commitments
+         (id, agent_id, memory_id, storage_provider, content_hash, encrypted_hash, cid, storage_status, evm_status, evm_chain_id, evm_to, evm_tx_hash, solana_status, solana_signature, last_error, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+       ON CONFLICT (memory_id)
+       DO UPDATE SET
+         id = EXCLUDED.id,
+         agent_id = EXCLUDED.agent_id,
+         storage_provider = EXCLUDED.storage_provider,
+         content_hash = EXCLUDED.content_hash,
+         encrypted_hash = EXCLUDED.encrypted_hash,
+         cid = EXCLUDED.cid,
+         storage_status = EXCLUDED.storage_status,
+         evm_status = EXCLUDED.evm_status,
+         evm_chain_id = EXCLUDED.evm_chain_id,
+         evm_to = EXCLUDED.evm_to,
+         evm_tx_hash = EXCLUDED.evm_tx_hash,
+         solana_status = EXCLUDED.solana_status,
+         solana_signature = EXCLUDED.solana_signature,
+         last_error = EXCLUDED.last_error,
+         updated_at = EXCLUDED.updated_at`,
+      [
+        record.id,
+        record.agentId,
+        record.memoryId,
+        record.storageProvider,
+        record.contentHash,
+        record.encryptedHash,
+        record.cid ?? null,
+        record.storageStatus,
+        record.evmStatus,
+        record.evmChainId ?? null,
+        record.evmTo ?? null,
+        record.evmTxHash ?? null,
+        record.solanaStatus,
+        record.solanaSignature ?? null,
+        record.lastError ?? null,
+        record.createdAt,
+        record.updatedAt,
+      ],
+    );
+  }
+
+  async listMemoryCommitmentsByAgent(agentId: string, opts?: { limit?: number }): Promise<MemoryCommitmentRecord[]> {
+    await this.init();
+    const limit = Math.max(1, Math.min(opts?.limit ?? 50, 500));
+    const result = await this.pool.query<MemoryCommitmentRow>(
+      `SELECT * FROM memory_commitments WHERE agent_id = $1 ORDER BY updated_at DESC LIMIT $2`,
+      [agentId, limit],
+    );
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      agentId: row.agent_id,
+      memoryId: row.memory_id,
+      storageProvider: row.storage_provider === 'pinata' ? 'pinata' : 'pinata',
+      contentHash: row.content_hash,
+      encryptedHash: row.encrypted_hash,
+      cid: row.cid ?? undefined,
+      storageStatus: row.storage_status,
+      evmStatus: row.evm_status,
+      evmChainId: row.evm_chain_id ?? undefined,
+      evmTo: row.evm_to ?? undefined,
+      evmTxHash: row.evm_tx_hash ?? undefined,
+      solanaStatus: row.solana_status,
+      solanaSignature: row.solana_signature ?? undefined,
+      lastError: row.last_error ?? undefined,
+      createdAt: new Date(row.created_at).toISOString(),
+      updatedAt: new Date(row.updated_at).toISOString(),
+    }));
   }
 
   async searchMemories(input: SearchMemoriesInput): Promise<SearchMemoryCandidate[]> {

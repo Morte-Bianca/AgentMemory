@@ -1,5 +1,6 @@
 import type { StoreAdapter } from '../storage';
 import type { EmbeddingProvider } from '../embeddings';
+import type { MemoryCommitmentService } from './memory-commitment-service';
 import type {
   MemoryRecord,
   RecallRequest,
@@ -117,6 +118,7 @@ export class MemoryService {
   constructor(
     private readonly store: StoreAdapter,
     private readonly embeddings: EmbeddingProvider,
+    private readonly commitments?: MemoryCommitmentService,
   ) {}
 
   async storeMemory(input: StoreMemoryInput): Promise<MemoryRecord> {
@@ -148,6 +150,12 @@ export class MemoryService {
 
     state.memories.push(memory);
     await this.store.write(state);
+
+    try {
+      this.commitments?.enqueue(memory);
+    } catch {
+      // best-effort
+    }
     return memory;
   }
 

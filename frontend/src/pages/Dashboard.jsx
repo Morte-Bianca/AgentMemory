@@ -8,6 +8,9 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [agent, setAgent] = useState(client.agent);
+  const [backfillBusy, setBackfillBusy] = useState(false);
+  const [backfillCursor, setBackfillCursor] = useState(null);
+  const [lastBackfillResult, setLastBackfillResult] = useState(null);
   const navigate = useNavigate();
   const { showAlert, showConfirm } = useUI();
 
@@ -52,6 +55,25 @@ const Dashboard = () => {
         showAlert("Error revoking API key: " + err.message, 'error');
       }
     });
+  };
+
+  const handleBackfillCommitments = async () => {
+    setBackfillBusy(true);
+    try {
+      const data = await client.backfillCommitments({ limit: 2, includeFailed: true, verify: true, cursor: backfillCursor || undefined });
+      const result = data?.result;
+      setLastBackfillResult(result || null);
+      setBackfillCursor(result?.nextCursor || null);
+      const okCount = (result?.results || []).filter((r) => r?.verification?.ipfs?.ok).length;
+      const processed = result?.processed ?? 0;
+      const skipped = result?.skipped ?? 0;
+      const cursorNote = result?.nextCursor ? 'cursor advanced' : 'no more candidates';
+      showAlert(`Commitments backfill done. processed=${processed}, skipped=${skipped}, ipfs(decrypt) ok=${okCount}/${processed}, ${cursorNote}`, 'success');
+    } catch (err) {
+      showAlert('Backfill failed: ' + err.message, 'error');
+    } finally {
+      setBackfillBusy(false);
+    }
   };
 
   return (
@@ -142,6 +164,66 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Commitments Panel */}
+        <div className="brutalist-panel">
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <RefreshCw className="text-muted" size={20} /> COMMITMENTS
+          </h3>
+
+          <p className="text-muted text-sm" style={{ marginBottom: 16, textTransform: 'uppercase' }}>
+            Backfill a small batch of existing memories into IPFS + EVM + Solana and verify decrypt.
+          </p>
+
+          <button className="btn" onClick={handleBackfillCommitments} disabled={backfillBusy}>
+            {backfillBusy ? 'PROCESSING…' : 'BACKFILL COMMITMENTS (2)'}
+          </button>
+
+          {lastBackfillResult ? (
+            <pre
+              style={{
+                marginTop: 16,
+                padding: 12,
+                border: '1px solid var(--border)',
+                background: 'var(--bg-color)',
+                overflow: 'auto',
+                maxHeight: 260,
+                fontSize: 12,
+              }}
+            >
+              {JSON.stringify(
+                {
+                  processed: lastBackfillResult.processed,
+                  skipped: lastBackfillResult.skipped,
+                  nextCursor: lastBackfillResult.nextCursor,
+                  results: (lastBackfillResult.results || []).map((r) => ({
+                    memoryId: r.memoryId,
+                    cid: r.commitment?.cid,
+                    evmTxHash: r.commitment?.evmTxHash,
+                    solanaSignature: r.commitment?.solanaSignature,
+                    verify: r.verification
+                      ? {
+                          contentHashMatches: r.verification?.contentHash?.matches,
+                          ipfsOk: r.verification?.ipfs?.ok,
+                          decryptOk: r.verification?.ipfs?.decryptOk,
+                          evmOk: r.verification?.evm?.ok,
+                          solanaOk: r.verification?.solana?.ok,
+                          errors: {
+                            contentHash: r.verification?.contentHash?.error,
+                            ipfs: r.verification?.ipfs?.error,
+                            evm: r.verification?.evm?.error,
+                            solana: r.verification?.solana?.error,
+                          },
+                        }
+                      : undefined,
+                  })),
+                },
+                null,
+                2,
+              )}
+            </pre>
+          ) : null}
         </div>
       </div>
     </div>

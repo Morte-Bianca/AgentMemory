@@ -65,4 +65,36 @@ export const config = {
   mcpAllowedOrigins: splitCsv(process.env.MCP_ALLOWED_ORIGINS),
   googleClientIds: splitCsv(process.env.GOOGLE_CLIENT_IDS || process.env.GOOGLE_CLIENT_ID),
   authSessionSecret: process.env.AUTH_SESSION_SECRET || '',
+
+  memoryCommitments: {
+    enabled: readBool(process.env.MEMORY_COMMITMENTS_ENABLED, false),
+    storageProvider: (process.env.MEMORY_COMMITMENTS_STORAGE_PROVIDER || 'pinata') as 'pinata',
+    encryptionKeyBase64: process.env.MEMORY_ENCRYPTION_KEY_BASE64 || '',
+
+    pinata: {
+      jwt: process.env.PINATA_JWT || '',
+      apiKey: process.env.PINATA_API_KEY || '',
+      apiSecret: process.env.PINATA_API_SECRET || '',
+      pinNamePrefix: process.env.PINATA_PIN_NAME_PREFIX || 'agentmemory',
+      pinGroupId: process.env.PINATA_PIN_GROUP_ID || '',
+    },
+
+    ipfsGatewayBaseUrl: process.env.IPFS_GATEWAY_BASE_URL || 'https://gateway.pinata.cloud/ipfs/',
+
+    evm: {
+      enabled: readBool(process.env.MEMORY_COMMITMENTS_EVM_ENABLED, false),
+      rpcUrl: process.env.EVM_RPC_URL || '',
+      chainId: process.env.EVM_CHAIN_ID ? Number(process.env.EVM_CHAIN_ID) : undefined,
+      privateKey: process.env.EVM_PRIVATE_KEY || '',
+      contractAddress: process.env.EVM_CONTRACT_ADDRESS || '',
+      toAddress: process.env.EVM_TO_ADDRESS || '',
+    },
+
+    solana: {
+      enabled: readBool(process.env.MEMORY_COMMITMENTS_SOLANA_ENABLED, false),
+      rpcUrl: process.env.SOLANA_RPC_URL || '',
+      programId: process.env.SOLANA_PROGRAM_ID || '',
+      secretKey: process.env.SOLANA_SECRET_KEY || '',
+    },
+  },
 };

@@ -94,6 +94,28 @@ export interface MemoryRecord {
   embeddingModel?: string;
 }
 
+export type MemoryCommitmentStatus = 'disabled' | 'pending' | 'uploaded' | 'submitted' | 'confirmed' | 'failed';
+
+export interface MemoryCommitmentRecord {
+  id: string;
+  agentId: string;
+  memoryId: string;
+  storageProvider: 'pinata';
+  contentHash: string;
+  encryptedHash: string;
+  cid?: string;
+  storageStatus: MemoryCommitmentStatus;
+  evmStatus: MemoryCommitmentStatus;
+  evmChainId?: number;
+  evmTo?: string;
+  evmTxHash?: string;
+  solanaStatus: MemoryCommitmentStatus;
+  solanaSignature?: string;
+  lastError?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DreamRunRecord {
   id: string;
   agentId: string;
@@ -133,6 +155,7 @@ export interface StoreData {
   agents: AgentRecord[];
   sessions: SessionRecord[];
   memories: MemoryRecord[];
+  memoryCommitments: MemoryCommitmentRecord[];
   dreamRuns: DreamRunRecord[];
   mcpSessions: McpSessionRecord[];
 }

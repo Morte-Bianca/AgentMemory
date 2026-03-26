@@ -1,0 +1,19 @@
+[package]
+name = "agentmemory_commitments"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program = "1.18.26"
+thiserror = "1.0.69"
+sha2 = "0.10.8"
+
+[features]
+no-entrypoint = []
+
+[patch.crates-io]
+constant_time_eq = { path = "vendor/constant_time_eq" }
+toml_datetime = { path = "vendor/toml_datetime" }

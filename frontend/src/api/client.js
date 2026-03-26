@@ -228,6 +228,15 @@ export class AgentClient {
       body: JSON.stringify({ agentId: this.requireAgentId() }),
     });
   }
+
+  // --- Commitments ---
+  async backfillCommitments({ limit = 2, includeFailed = true, verify = true, cursor } = {}) {
+    const agentId = this.requireAgentId();
+    return this.fetch(`/v1/agents/${agentId}/commitments/backfill`, {
+      method: 'POST',
+      body: JSON.stringify({ limit, includeFailed, verify, ...(cursor ? { cursor } : {}) }),
+    });
+  }
 }
 
 export const client = new AgentClient();
