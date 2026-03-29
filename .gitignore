@@ -6,6 +6,9 @@ data/
 public/
 .DS_Store
 
+# Rust build output (verified-build tooling)
+target/
+
 # Chain dev/build outputs (not needed for Vercel deploy)
 chain/**/node_modules/
 chain/evm/artifacts/

@@ -29,3 +29,7 @@ Set the deployed program id in the API env:
 
 - `SOLANA_PROGRAM_ID=<program_id>`
 
+## Verified builds (Solscan/Explorer "Verified")
+
+See [chain/solana/verified-builds.md](chain/solana/verified-builds.md).
+
